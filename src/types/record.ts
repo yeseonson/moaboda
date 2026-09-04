@@ -10,10 +10,10 @@ export const STATUS_LABEL: Record<StatusType, string> = {
 };
 
 export const STATUS_COLOR: Record<StatusType, string> = {
-  want: "bg-pink-50 text-pink-500",
-  in_progress: "bg-blue-50 text-blue-500",
-  planned: "bg-violet-50 text-violet-500",
-  done: "bg-zinc-100 text-zinc-500",
+  want: "bg-cat-book/12 text-cat-book",
+  in_progress: "bg-cat-movie/12 text-cat-movie",
+  planned: "bg-brass/12 text-brass",
+  done: "bg-brand-soft text-ink-muted",
 };
 
 // ── Works (정규화된 작품 정보) ────────────────────────────────
@@ -106,10 +106,10 @@ export const SUB_CATEGORY_LABEL: Record<SubCategoryType, string> = {
 };
 
 export const SUB_CATEGORY_COLOR: Record<SubCategoryType, string> = {
-  musical: "bg-yellow-100 text-yellow-800",
-  play: "bg-purple-100 text-purple-800",
-  concert: "bg-orange-100 text-orange-800",
-  etc: "bg-gray-100 text-gray-700",
+  musical: "bg-brass/12 text-brass",
+  play: "bg-cat-performance/12 text-cat-performance",
+  concert: "bg-cat-movie/12 text-cat-movie",
+  etc: "bg-brand-soft text-ink-muted",
 };
 
 // 하위 호환 alias (기존 코드에서 MovieDetail 등으로 참조하는 경우)

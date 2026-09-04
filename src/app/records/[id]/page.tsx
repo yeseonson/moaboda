@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import RatingDots from "@/components/record/RatingDots";
 import {
   CulturalRecord,
   STATUS_COLOR,
@@ -165,12 +166,7 @@ export default function RecordDetailPage() {
               <span className="ml-2 text-xs text-zinc-400">{record.read_count}번째 읽기</span>
             )}
           </p>
-          {rating > 0 && (
-            <p className="mt-2 text-lg text-brass">
-              {"★".repeat(rating)}
-              {"☆".repeat(5 - rating)}
-            </p>
-          )}
+          {rating > 0 && <RatingDots value={rating} size={11} className="mt-3" />}
 
           {isMovieOrBook && (
             <div className={`mt-4 flex gap-1 rounded-xl border border-zinc-200 p-1 transition-opacity ${statusSaving ? "opacity-50" : ""}`}>

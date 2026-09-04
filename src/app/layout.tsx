@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, IBM_Plex_Sans_KR } from "next/font/google";
 import "./globals.css";
 import NavWrapper from "@/components/layout/NavWrapper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// 워드마크와 같은 서체. Geist 는 latin 서브셋만 받아서 한글이 시스템 폰트로 떨어졌다.
+const plexSansKr = IBM_Plex_Sans_KR({
+  variable: "--font-plex-kr",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -37,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plexSansKr.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas text-ink">
         {children}

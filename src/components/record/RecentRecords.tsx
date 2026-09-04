@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import RatingDots from "./RatingDots";
 import {
   CategoryType,
   CulturalRecord,
@@ -74,7 +75,7 @@ function RecordCard({
     <div className="relative">
       <Link
         href={`/records/${record.id}`}
-        className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-brand-soft p-3 transition hover:border-zinc-300"
+        className="flex items-center gap-3 rounded-xl border border-line-strong p-3 transition hover:border-brand/25"
       >
         {record.poster_url ? (
           <img
@@ -83,14 +84,14 @@ function RecordCard({
             className="h-16 w-12 shrink-0 rounded-lg object-cover"
           />
         ) : (
-          <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-200 text-xl">
+          <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xl">
             {TABS.find((t) => t.key === record.category)?.icon ?? "📝"}
           </div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {record.sub_category && (
-              <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+              <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-xs text-ink-muted">
                 {SUB_CATEGORY_LABEL[record.sub_category]}
               </span>
             )}
@@ -105,39 +106,36 @@ function RecordCard({
             )}
           </div>
           {dateDisplay && (
-            <p className="mt-0.5 text-xs text-zinc-400">
+            <p className="mt-0.5 text-xs text-ink-subtle">
               {dateDisplay}
               {record.show_time && ` ${record.show_time}`}
             </p>
           )}
           {recordCast(record).length > 0 && (
-            <p className="mt-0.5 truncate text-xs text-zinc-400">
+            <p className="mt-0.5 truncate text-xs text-ink-subtle">
               {recordCast(record).join(", ")}
             </p>
           )}
           {record.category === "movie" &&
             record.movies?.genres &&
             record.movies.genres.length > 0 && (
-              <p className="mt-0.5 truncate text-xs text-zinc-400">
+              <p className="mt-0.5 truncate text-xs text-ink-subtle">
                 {record.movies.genres.slice(0, 3).join(" · ")}
               </p>
             )}
           {record.category === "book" && record.books?.genre && (
-            <p className="mt-0.5 truncate text-xs text-zinc-400">
+            <p className="mt-0.5 truncate text-xs text-ink-subtle">
               {record.books.genre}
             </p>
           )}
-          {record.rating && record.status === "done" && (
-            <p className="mt-0.5 text-xs text-brass">
-              {"★".repeat(record.rating)}
-              {"☆".repeat(5 - record.rating)}
-            </p>
+          {record.status === "done" && (
+            <RatingDots value={record.rating} size={7} className="mt-1" />
           )}
         </div>
       </Link>
 
       {pickerOpen && (
-        <div className="absolute right-3 top-3 z-10 flex gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-md">
+        <div className="absolute right-3 top-3 z-10 flex gap-1 rounded-xl border border-line-strong bg-white p-1 shadow-md">
           {STATUS_OPTS.map((opt) => (
             <button
               key={opt.value}
@@ -145,7 +143,7 @@ function RecordCard({
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 record.status === opt.value
                   ? "bg-brand text-white"
-                  : "text-zinc-500 hover:bg-zinc-100"
+                  : "text-ink-muted hover:bg-brand-soft"
               }`}
             >
               {opt.label}
@@ -191,7 +189,7 @@ function GroupRow({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-xl border border-zinc-100 bg-brand-soft p-3 text-left transition hover:border-zinc-300"
+        className="flex w-full items-center gap-3 rounded-xl border border-line-strong p-3 text-left transition hover:border-brand/25"
       >
         {group.poster_url ? (
           <img
@@ -200,14 +198,14 @@ function GroupRow({
             className="h-16 w-12 shrink-0 rounded-lg object-cover"
           />
         ) : (
-          <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-200 text-xl">
+          <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xl">
             {TABS.find((t) => t.key === group.category)?.icon ?? "📝"}
           </div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {group.sub_category && (
-              <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+              <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-xs text-ink-muted">
                 {SUB_CATEGORY_LABEL[group.sub_category]}
               </span>
             )}
@@ -222,16 +220,16 @@ function GroupRow({
                 예정 {group.plannedCount}
               </span>
             )}
-            <span className="text-xs text-zinc-400">{group.latest}</span>
+            <span className="text-xs text-ink-subtle">{group.latest}</span>
           </div>
         </div>
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-sm font-medium leading-none text-zinc-500">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-medium leading-none text-ink-muted">
           {open ? "−" : "+"}
         </span>
       </button>
 
       {open && (
-        <ul className="ml-4 space-y-2 border-l border-zinc-100 pl-3">
+        <ul className="ml-4 space-y-2 border-l border-line pl-3">
           {group.records.map((r) => (
             <li key={r.id}>
               <RecordCard record={r} onStatusChange={onStatusChange} />
@@ -410,7 +408,7 @@ export default function RecentRecords() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl bg-zinc-100" />
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-brand-soft" />
         ))}
       </div>
     );
@@ -420,7 +418,7 @@ export default function RecentRecords() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 rounded-xl border border-zinc-200 p-1">
+      <div className="flex gap-1 rounded-xl border border-line-strong p-1">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
@@ -428,14 +426,14 @@ export default function RecentRecords() {
             className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
               tab === key
                 ? "bg-brand text-white"
-                : "text-zinc-500 hover:text-zinc-700"
+                : "text-ink-muted hover:text-ink"
             }`}
           >
             {label}
             {counts[key] > 0 && (
               <span
                 className={`rounded-full px-1.5 py-0.5 text-xs ${
-                  tab === key ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-400"
+                  tab === key ? "bg-white/20 text-white" : "bg-brand-soft text-ink-subtle"
                 }`}
               >
                 {counts[key]}
@@ -446,9 +444,21 @@ export default function RecentRecords() {
       </div>
 
       {isEmpty ? (
-        <p className="py-8 text-center text-sm text-zinc-400">
-          아직 기록이 없어요.
-        </p>
+        <div className="flex flex-col items-center gap-3 py-10">
+          <img
+            src="/assets/logo-symbol-mono.svg"
+            alt=""
+            aria-hidden
+            className="h-14 w-14 opacity-15"
+          />
+          <p className="text-sm text-ink-subtle">아직 기록이 없어요.</p>
+          <Link
+            href={`/add/${tab}`}
+            className="border-b border-brand/40 pb-0.5 text-sm font-medium text-brand transition hover:border-brand"
+          >
+            첫 {TABS.find((t) => t.key === tab)?.label} 기록하기
+          </Link>
+        </div>
       ) : (
         <div className="space-y-3">
           {years.length > 1 && (
@@ -460,7 +470,7 @@ export default function RecentRecords() {
                   className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                     activeYear === y
                       ? "bg-brand-soft text-brand"
-                      : "text-zinc-400 hover:text-zinc-600"
+                      : "text-ink-subtle hover:text-ink"
                   }`}
                 >
                   {y}
@@ -472,7 +482,7 @@ export default function RecentRecords() {
                 className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                   activeYear === "all"
                     ? "bg-brand-soft text-brand"
-                    : "text-zinc-400 hover:text-zinc-600"
+                    : "text-ink-subtle hover:text-ink"
                 }`}
               >
                 전체
@@ -490,7 +500,7 @@ export default function RecentRecords() {
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                     activeSubTab === key
                       ? "bg-brand text-white"
-                      : "bg-zinc-100 text-zinc-500 hover:text-zinc-700"
+                      : "bg-brand-soft text-ink-muted hover:text-ink"
                   }`}
                 >
                   {label} {count}
