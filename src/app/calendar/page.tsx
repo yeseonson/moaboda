@@ -5,17 +5,18 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { CategoryType, CulturalRecord, STATUS_COLOR, STATUS_LABEL, SUB_CATEGORY_LABEL, recordDate } from "@/types/record";
 import PageHeader from "@/components/layout/PageHeader";
+import RatingDots from "@/components/record/RatingDots";
 
 const DOT_COLOR: Record<CategoryType, string> = {
-  performance: "bg-violet-400",
-  movie: "bg-blue-400",
-  book: "bg-pink-400",
+  performance: "bg-cat-performance",
+  movie: "bg-cat-movie",
+  book: "bg-cat-book",
 };
 
-const DOT_HEX: Record<CategoryType, string> = {
-  performance: "#a78bfa",
-  movie: "#60a5fa",
-  book: "#f472b6",
+const CHIP_ACTIVE: Record<CategoryType, string> = {
+  performance: "border-cat-performance bg-cat-performance",
+  movie: "border-cat-movie bg-cat-movie",
+  book: "border-cat-book bg-cat-book",
 };
 
 const CALENDAR_CATEGORIES: { value: CategoryType; label: string }[] = [
@@ -29,6 +30,22 @@ const CATEGORY_LABEL: Record<CategoryType, string> = {
   movie: "영화",
   book: "책",
 };
+
+const MONTH_ABBR = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+/** "2026-09-02" -> SEP / 02 배지 */
+function DateBadge({ date }: { date: string | null }) {
+  if (!date) return null;
+  const [, m, d] = date.split("-");
+  return (
+    <div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-brand-soft">
+      <span className="text-[10px] font-medium tracking-wide text-ink-muted">
+        {MONTH_ABBR[Number(m) - 1]}
+      </span>
+      <span className="text-lg font-semibold leading-tight text-ink">{d}</span>
+    </div>
+  );
+}
 
 export default function CalendarPage() {
   const today = new Date();
@@ -87,14 +104,14 @@ export default function CalendarPage() {
       <main className="mx-auto max-w-lg p-4 space-y-4">
         <section className="rounded-2xl bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="px-2 py-1 text-zinc-500 hover:text-zinc-800">‹</button>
+            <button onClick={prevMonth} className="px-2 py-1 text-ink-muted hover:text-ink">‹</button>
             <span className="text-base font-semibold">{year}년 {month}월</span>
-            <button onClick={nextMonth} className="px-2 py-1 text-zinc-500 hover:text-zinc-800">›</button>
+            <button onClick={nextMonth} className="px-2 py-1 text-ink-muted hover:text-ink">›</button>
           </div>
 
           <div className="grid grid-cols-7 mb-2">
             {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-              <div key={d} className="text-center text-xs font-medium text-zinc-400 py-1">{d}</div>
+              <div key={d} className="text-center text-xs font-medium text-ink-subtle py-1">{d}</div>
             ))}
           </div>
 
@@ -111,7 +128,7 @@ export default function CalendarPage() {
                   key={day}
                   onClick={() => setSelectedDate(isSelected ? null : dateStr)}
                   className={`flex flex-col items-center rounded-xl py-1.5 transition ${
-                    isSelected ? "bg-brand" : isToday ? "bg-zinc-100" : "hover:bg-zinc-50"
+                    isSelected ? "bg-brand" : isToday ? "bg-brand-soft" : "hover:bg-brand-soft/60"
                   }`}
                 >
                   <span className={`text-sm ${isSelected ? "font-bold text-white" : isToday ? "font-bold" : ""}`}>
@@ -136,9 +153,8 @@ export default function CalendarPage() {
                 key={cat}
                 onClick={() => setFilterCategory(active ? null : cat)}
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                  active ? "border-transparent text-white" : "border-zinc-200 text-zinc-500 hover:border-zinc-400"
+                  active ? `text-white ${CHIP_ACTIVE[cat]}` : "border-line-strong text-ink-muted hover:border-brand/40"
                 }`}
-                style={active ? { backgroundColor: DOT_HEX[cat], borderColor: DOT_HEX[cat] } : {}}
               >
                 <span className={`h-2 w-2 rounded-full ${DOT_COLOR[cat]}`} />
                 {label}
@@ -149,15 +165,15 @@ export default function CalendarPage() {
 
         <section className="rounded-2xl bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-medium text-zinc-500">{displayLabel}</p>
+            <p className="text-sm font-medium text-ink-muted">{displayLabel}</p>
             {selectedDate && (
-              <button onClick={() => setSelectedDate(null)} className="text-xs text-zinc-400 hover:text-zinc-600">
+              <button onClick={() => setSelectedDate(null)} className="text-xs text-ink-subtle hover:text-ink">
                 전체 보기
               </button>
             )}
           </div>
           {displayRecords.length === 0 ? (
-            <p className="text-center text-sm text-zinc-400 py-4">
+            <p className="text-center text-sm text-ink-subtle py-4">
               {selectedDate ? "이 날의 기록이 없어요" : "이 달의 기록이 없어요"}
             </p>
           ) : (
@@ -166,39 +182,29 @@ export default function CalendarPage() {
                 <li key={r.id}>
                   <Link
                     href={`/records/${r.id}`}
-                    className="flex items-center gap-3 rounded-xl border border-zinc-100 p-3 transition hover:border-zinc-300"
+                    className="flex items-center gap-3 rounded-xl border border-line p-3 transition hover:border-brand/25"
                   >
-                    {r.poster_url ? (
-                      <img src={r.poster_url} alt={r.title} className="h-14 w-10 shrink-0 rounded-lg object-cover" />
-                    ) : (
-                      <div className={`flex h-14 w-10 shrink-0 items-center justify-center rounded-lg text-lg ${DOT_COLOR[r.category].replace("bg-", "bg-").replace("-400", "-100")}`}>
-                        {r.category === "movie" ? "🎬" : r.category === "book" ? "📚" : "🎭"}
-                      </div>
-                    )}
+                    <DateBadge date={recordDate(r)} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
-                          {r.sub_category ? SUB_CATEGORY_LABEL[r.sub_category] : CATEGORY_LABEL[r.category]}
+                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${DOT_COLOR[r.category]}`} />
+                        <span className="truncate">
+                          {[
+                            r.sub_category ? SUB_CATEGORY_LABEL[r.sub_category] : CATEGORY_LABEL[r.category],
+                            r.category === "performance" ? r.performances?.venue : r.venue,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
                         {r.status !== "done" && (
                           <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_COLOR[r.status]}`}>
                             {STATUS_LABEL[r.status]}
                           </span>
                         )}
-                        <p className="truncate text-sm font-medium">{r.title}</p>
                       </div>
-                      <p className="mt-0.5 text-xs text-zinc-400">{recordDate(r)}</p>
-                      {r.category === "movie" && r.movies?.genres && r.movies.genres.length > 0 && (
-                        <p className="mt-0.5 truncate text-xs text-zinc-400">
-                          {r.movies.genres.slice(0, 3).join(" · ")}
-                        </p>
-                      )}
-                      {r.category === "book" && r.books?.genre && (
-                        <p className="mt-0.5 truncate text-xs text-zinc-400">
-                          {r.books.genre}
-                        </p>
-                      )}
+                      <p className="mt-1 truncate text-sm font-semibold">{r.title}</p>
                     </div>
+                    <RatingDots value={r.rating} />
                   </Link>
                 </li>
               ))}

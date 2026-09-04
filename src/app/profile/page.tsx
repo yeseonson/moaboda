@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api";
+import RatingDots from "@/components/record/RatingDots";
 import { CategoryType, CulturalRecord, recordCast, recordDate, SUB_CATEGORY_LABEL } from "@/types/record";
 import PageHeader from "@/components/layout/PageHeader";
 
@@ -256,9 +257,7 @@ function RatingDist({ records, color = "#a1a1aa" }: { records: CulturalRecord[];
     <div className="space-y-1.5">
       {dist.map(({ star, count }) => (
         <div key={star} className="flex items-center gap-2">
-          <span className="shrink-0 w-20 text-xs text-brass">
-            {"★".repeat(star)}
-          </span>
+          <RatingDots value={star} size={6} className="w-20" />
           <div className="flex-1 rounded-full bg-zinc-100 h-2">
             <div
               className="h-2 rounded-full transition-all"
