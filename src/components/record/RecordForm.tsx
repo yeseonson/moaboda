@@ -163,7 +163,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
                 onClick={() => onSubCategoryChange(value)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                   subCategory === value
-                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    ? "border-brand bg-brand text-white"
                     : "border-zinc-200 text-zinc-500 hover:border-zinc-400"
                 }`}
               >
@@ -272,7 +272,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
                   onClick={() => toggleCast(name)}
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                     selected
-                      ? "border-zinc-900 bg-zinc-900 text-white"
+                      ? "border-brand bg-brand text-white"
                       : "border-zinc-200 text-zinc-500 hover:border-zinc-400"
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+        className="w-full rounded-xl bg-brand py-3 text-sm font-medium text-white transition hover:bg-brand-hover disabled:opacity-50"
       >
         {submitting ? "저장 중..." : "기록 저장"}
       </button>

@@ -123,10 +123,10 @@ export default function EditRecordPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-zinc-50" />;
+  if (loading) return <div className="min-h-screen bg-canvas" />;
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-10">
+    <div className="min-h-screen bg-canvas pb-10">
       <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-4 py-4 shadow-sm">
         <button onClick={() => router.back()} className="text-lg text-zinc-500">←</button>
         <h1 className="text-base font-semibold">기록 수정</h1>
@@ -139,7 +139,7 @@ export default function EditRecordPage() {
             {STATUS_OPTS.map(opt => (
               <button key={opt.value} type="button" onClick={() => setStatus(opt.value)}
                 className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
-                  status === opt.value ? "bg-zinc-900 text-white" : "text-zinc-500 hover:text-zinc-700"
+                  status === opt.value ? "bg-brand text-white" : "text-zinc-500 hover:text-zinc-700"
                 }`}>
                 {opt.label}
               </button>
@@ -247,7 +247,7 @@ export default function EditRecordPage() {
         )}
 
         <button type="submit" disabled={submitting}
-          className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50">
+          className="w-full rounded-xl bg-brand py-3 text-sm font-medium text-white transition hover:bg-brand-hover disabled:opacity-50">
           {submitting ? "저장 중..." : "수정 완료"}
         </button>
       </form>

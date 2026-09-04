@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 모아보다 브랜드 토큰 — assets/tokens.css 와 동일한 값.
+   그린은 로고·활성 탭·FAB·선택된 내비게이션에만, 황동은 별점·도트에만. */
+@theme {
+  --color-brand: #27473c;
+  --color-brand-hover: #1c3630;
+  --color-brand-soft: #f2f5f3;
+  --color-brass: #c08a2e;
+  --color-canvas: #fbfaf7;
+  --color-paper: #f0ead8;
+  --color-ink: #1c2b25;
+  --color-ink-muted: #8a948e;
+  --color-ink-subtle: #9aa79f;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

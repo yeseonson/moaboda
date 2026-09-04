@@ -14,7 +14,7 @@ export default function StarRating({ value, onChange }: StarRatingProps) {
           type="button"
           onClick={() => onChange(star)}
           className={`text-2xl transition-colors ${
-            star <= value ? "text-yellow-400" : "text-zinc-200"
+            star <= value ? "text-brass" : "text-zinc-200"
           }`}
         >
           ★

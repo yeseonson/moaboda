@@ -74,7 +74,7 @@ function RecordCard({
     <div className="relative">
       <Link
         href={`/records/${record.id}`}
-        className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 transition hover:border-zinc-300"
+        className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-brand-soft p-3 transition hover:border-zinc-300"
       >
         {record.poster_url ? (
           <img
@@ -128,7 +128,7 @@ function RecordCard({
             </p>
           )}
           {record.rating && record.status === "done" && (
-            <p className="mt-0.5 text-xs text-yellow-500">
+            <p className="mt-0.5 text-xs text-brass">
               {"★".repeat(record.rating)}
               {"☆".repeat(5 - record.rating)}
             </p>
@@ -144,7 +144,7 @@ function RecordCard({
               onClick={(e) => handleStatusPick(e, opt.value)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 record.status === opt.value
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-brand text-white"
                   : "text-zinc-500 hover:bg-zinc-100"
               }`}
             >
@@ -191,7 +191,7 @@ function GroupRow({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 text-left transition hover:border-zinc-300"
+        className="flex w-full items-center gap-3 rounded-xl border border-zinc-100 bg-brand-soft p-3 text-left transition hover:border-zinc-300"
       >
         {group.poster_url ? (
           <img
@@ -214,7 +214,7 @@ function GroupRow({
             <p className="truncate text-sm font-medium">{group.title}</p>
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
+            <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-medium text-white">
               {group.total}회
             </span>
             {group.plannedCount > 0 && (
@@ -427,7 +427,7 @@ export default function RecentRecords() {
             onClick={() => handleTabChange(key)}
             className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
               tab === key
-                ? "bg-zinc-900 text-white"
+                ? "bg-brand text-white"
                 : "text-zinc-500 hover:text-zinc-700"
             }`}
           >
@@ -459,7 +459,7 @@ export default function RecentRecords() {
                   onClick={() => setYear(y)}
                   className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                     activeYear === y
-                      ? "bg-zinc-200 text-zinc-900"
+                      ? "bg-brand-soft text-brand"
                       : "text-zinc-400 hover:text-zinc-600"
                   }`}
                 >
@@ -471,7 +471,7 @@ export default function RecentRecords() {
                 onClick={() => setYear("all")}
                 className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                   activeYear === "all"
-                    ? "bg-zinc-200 text-zinc-900"
+                    ? "bg-brand-soft text-brand"
                     : "text-zinc-400 hover:text-zinc-600"
                 }`}
               >
@@ -489,7 +489,7 @@ export default function RecentRecords() {
                   onClick={() => setSubTab(key)}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                     activeSubTab === key
-                      ? "bg-zinc-900 text-white"
+                      ? "bg-brand text-white"
                       : "bg-zinc-100 text-zinc-500 hover:text-zinc-700"
                   }`}
                 >

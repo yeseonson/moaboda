@@ -51,7 +51,7 @@ export default function MovieSearch({ onSelect }: Props) {
           <button
             onClick={search}
             disabled={loading}
-            className="rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-xl bg-brand px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
           >
             검색
           </button>

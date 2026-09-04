@@ -78,7 +78,7 @@ export default function RecordDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="min-h-screen bg-canvas">
         <div className="h-64 animate-pulse bg-zinc-200" />
         <div className="p-4 space-y-3">
           <div className="h-6 w-2/3 animate-pulse rounded bg-zinc-200" />
@@ -115,7 +115,7 @@ export default function RecordDetailPage() {
   const isMovieOrBook = record.category === "movie" || record.category === "book";
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-10">
+    <div className="min-h-screen bg-canvas pb-10">
       <header className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-4 shadow-sm">
         <button onClick={() => router.back()} className="text-lg text-zinc-500">
           ←
@@ -138,7 +138,7 @@ export default function RecordDetailPage() {
       </header>
 
       {record.poster_url && (
-        <div className="flex justify-center bg-zinc-900 py-8">
+        <div className="flex justify-center bg-brand py-8">
           <img
             src={record.poster_url}
             alt={record.title}
@@ -166,7 +166,7 @@ export default function RecordDetailPage() {
             )}
           </p>
           {rating > 0 && (
-            <p className="mt-2 text-lg text-yellow-400">
+            <p className="mt-2 text-lg text-brass">
               {"★".repeat(rating)}
               {"☆".repeat(5 - rating)}
             </p>
@@ -181,7 +181,7 @@ export default function RecordDetailPage() {
                   disabled={statusSaving}
                   className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
                     record.status === opt.value
-                      ? "bg-zinc-900 text-white"
+                      ? "bg-brand text-white"
                       : "text-zinc-500 hover:text-zinc-700"
                   }`}
                 >
@@ -339,7 +339,7 @@ export default function RecordDetailPage() {
                   <button
                     onClick={saveReview}
                     disabled={reviewSaving || (!reviewDraft.trim() && !record.review)}
-                    className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-700 disabled:opacity-40"
+                    className="rounded-lg bg-brand px-4 py-1.5 text-xs font-medium text-white transition hover:bg-brand-hover disabled:opacity-40"
                   >
                     {reviewSaving ? "저장 중..." : "저장"}
                   </button>

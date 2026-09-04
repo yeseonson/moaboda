@@ -15,11 +15,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+    <div className="flex min-h-screen items-center justify-center bg-canvas">
       <div className="w-full max-w-sm space-y-6 rounded-2xl bg-white p-8 shadow-sm">
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">모아보다</h1>
-          <p className="text-sm text-zinc-500">나의 문화생활을 한 곳에</p>
+        <div className="space-y-3 text-center">
+          <img
+            src="/assets/logo-vertical-green.svg"
+            alt="모아보다"
+            className="mx-auto h-24 w-auto"
+          />
+          <p className="text-sm text-ink-muted">나의 문화생활을 한 곳에</p>
         </div>
         <button
           onClick={handleGoogleLogin}

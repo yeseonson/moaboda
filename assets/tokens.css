@@ -1,0 +1,28 @@
+:root {
+  /* brand */
+  --moa-green: #27473C;        /* 로고 · 활성 상태 · 주요 액션 */
+  --moa-green-hover: #1C3630;
+  --moa-green-soft: #F2F5F3;   /* 그린 계열 옅은 면 */
+  --moa-brass: #C08A2E;        /* 별점 · 절취선 도트에만 */
+
+  /* categories */
+  --moa-cat-show: #27473C;     /* 공연 */
+  --moa-cat-movie: #C08A2E;    /* 영화 */
+  --moa-cat-book: #A8543B;     /* 책 */
+  --moa-sunday: #A8544B;
+
+  /* surfaces */
+  --moa-bg: #FBFAF7;           /* 페이지 배경(종이) */
+  --moa-surface: #FFFFFF;      /* 카드 */
+  --moa-paper: #F0EAD8;        /* 그린 위 반전 텍스트/면 */
+  --moa-border: rgba(28, 26, 23, 0.08);
+
+  /* text */
+  --moa-text: #1C2B25;
+  --moa-text-muted: #8A948E;
+  --moa-text-subtle: #9AA79F;
+
+  /* radius */
+  --moa-radius-card: 14px;
+  --moa-radius-control: 10px;
+}

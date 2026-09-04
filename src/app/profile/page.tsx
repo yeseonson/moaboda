@@ -256,7 +256,7 @@ function RatingDist({ records, color = "#a1a1aa" }: { records: CulturalRecord[];
     <div className="space-y-1.5">
       {dist.map(({ star, count }) => (
         <div key={star} className="flex items-center gap-2">
-          <span className="shrink-0 w-20 text-xs text-yellow-400">
+          <span className="shrink-0 w-20 text-xs text-brass">
             {"★".repeat(star)}
           </span>
           <div className="flex-1 rounded-full bg-zinc-100 h-2">
@@ -435,7 +435,7 @@ export default function ProfilePage() {
   })();
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-20">
+    <div className="min-h-screen bg-canvas pb-20">
       <PageHeader />
 
       <main className="mx-auto max-w-lg space-y-4 p-4">
@@ -457,7 +457,7 @@ export default function ProfilePage() {
               {avgRating > 0 && (
                 <p className="text-sm text-zinc-500">
                   평균 평점{" "}
-                  <span className="font-semibold text-yellow-500">
+                  <span className="font-semibold text-brass">
                     {avgRating.toFixed(1)}점
                   </span>
                 </p>
@@ -499,7 +499,7 @@ export default function ProfilePage() {
                     onClick={() => setTab(t)}
                     className={`px-3 pb-2 text-sm font-medium transition-colors ${
                       tab === t
-                        ? "border-b-2 border-zinc-900 text-zinc-900"
+                        ? "border-b-2 border-brand text-brand"
                         : "text-zinc-400 hover:text-zinc-600"
                     }`}
                   >

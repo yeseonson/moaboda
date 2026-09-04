@@ -7,7 +7,7 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-20">
+    <div className="min-h-screen bg-canvas pb-20">
       <PageHeader />
 
       <main className="mx-auto max-w-lg space-y-6 p-4">

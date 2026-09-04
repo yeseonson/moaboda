@@ -81,7 +81,7 @@ export default function CalendarPage() {
   const displayLabel = selectedDate ? selectedDate : `${year}년 ${month}월 전체`;
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-20">
+    <div className="min-h-screen bg-canvas pb-20">
       <PageHeader />
 
       <main className="mx-auto max-w-lg p-4 space-y-4">
@@ -111,7 +111,7 @@ export default function CalendarPage() {
                   key={day}
                   onClick={() => setSelectedDate(isSelected ? null : dateStr)}
                   className={`flex flex-col items-center rounded-xl py-1.5 transition ${
-                    isSelected ? "bg-zinc-900" : isToday ? "bg-zinc-100" : "hover:bg-zinc-50"
+                    isSelected ? "bg-brand" : isToday ? "bg-zinc-100" : "hover:bg-zinc-50"
                   }`}
                 >
                   <span className={`text-sm ${isSelected ? "font-bold text-white" : isToday ? "font-bold" : ""}`}>

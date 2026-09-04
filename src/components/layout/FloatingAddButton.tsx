@@ -58,7 +58,7 @@ export default function FloatingAddButton() {
 
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg transition hover:bg-zinc-700 active:scale-95"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-lg transition hover:bg-brand-hover active:scale-95"
           aria-label="기록 추가"
         >
           <span

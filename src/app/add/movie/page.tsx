@@ -18,7 +18,7 @@ export default function AddMoviePage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-24">
+    <div className="min-h-screen bg-canvas pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-4 py-4 shadow-sm">
         <button
           onClick={() => (step === "search" ? router.back() : setStep("search"))}
@@ -32,7 +32,7 @@ export default function AddMoviePage() {
             <div
               key={s}
               className={`h-1.5 w-6 rounded-full transition-colors ${
-                i <= (step === "search" ? 0 : 1) ? "bg-zinc-900" : "bg-zinc-200"
+                i <= (step === "search" ? 0 : 1) ? "bg-brand" : "bg-zinc-200"
               }`}
             />
           ))}

@@ -27,7 +27,7 @@ export default function AddCategoryPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-24">
+    <div className="min-h-screen bg-canvas pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-4 py-4 shadow-sm">
         <button onClick={() => router.back()} className="text-lg text-zinc-500">
           ←

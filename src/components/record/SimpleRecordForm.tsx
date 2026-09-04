@@ -122,7 +122,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         {STATUS_OPTS.map(opt => (
           <button key={opt.value} type="button" onClick={() => setStatus(opt.value)}
             className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
-              status === opt.value ? "bg-zinc-900 text-white" : "text-zinc-500 hover:text-zinc-700"
+              status === opt.value ? "bg-brand text-white" : "text-zinc-500 hover:text-zinc-700"
             }`}>
             {opt.label}
           </button>
@@ -192,7 +192,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
       )}
 
       <button type="submit" disabled={submitting}
-        className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50">
+        className="w-full rounded-xl bg-brand py-3 text-sm font-medium text-white transition hover:bg-brand-hover disabled:opacity-50">
         {submitting ? "저장 중..." : "기록 저장"}
       </button>
     </form>

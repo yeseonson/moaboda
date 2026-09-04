@@ -22,7 +22,7 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors ${
-                isActive ? "text-zinc-900 font-medium" : "text-zinc-400"
+                isActive ? "text-brand font-medium" : "text-zinc-400"
               }`}
             >
               <span className="text-lg leading-none">{icon}</span>
