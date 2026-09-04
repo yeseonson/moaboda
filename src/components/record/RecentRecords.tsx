@@ -396,14 +396,6 @@ export default function RecentRecords() {
     return out;
   }, [yearRecords, activeSubTab]);
 
-  const counts = useMemo(
-    () =>
-      Object.fromEntries(
-        TABS.map(({ key }) => [key, records.filter((r) => r.category === key).length])
-      ) as Record<CategoryType, number>,
-    [records]
-  );
-
   if (loading) {
     return (
       <div className="space-y-3">
@@ -423,22 +415,13 @@ export default function RecentRecords() {
           <button
             key={key}
             onClick={() => handleTabChange(key)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition ${
+            className={`flex flex-1 items-center justify-center rounded-lg py-2 text-sm font-medium transition ${
               tab === key
                 ? "bg-brand text-white"
                 : "text-ink-muted hover:text-ink"
             }`}
           >
             {label}
-            {counts[key] > 0 && (
-              <span
-                className={`rounded-full px-1.5 py-0.5 text-xs ${
-                  tab === key ? "bg-white/20 text-white" : "bg-brand-soft text-ink-subtle"
-                }`}
-              >
-                {counts[key]}
-              </span>
-            )}
           </button>
         ))}
       </div>
