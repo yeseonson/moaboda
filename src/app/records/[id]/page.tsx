@@ -11,6 +11,7 @@ import {
   StatusType,
   SUB_CATEGORY_COLOR,
   SUB_CATEGORY_LABEL,
+  recordCast,
   recordDate,
 } from "@/types/record";
 
@@ -27,6 +28,9 @@ export default function RecordDetailPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [statusSaving, setStatusSaving] = useState(false);
+  const [editingReview, setEditingReview] = useState(false);
+  const [reviewDraft, setReviewDraft] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
 
   useEffect(() => {
     api.records
@@ -84,6 +88,24 @@ export default function RecordDetailPage() {
     );
   }
 
+  const openReview = () => {
+    setReviewDraft(record?.review ?? "");
+    setEditingReview(true);
+  };
+
+  const saveReview = async () => {
+    if (!record || reviewSaving) return;
+    const next = reviewDraft.trim() || null;
+    setReviewSaving(true);
+    try {
+      await api.records.update(record.id, { review: next });
+      setRecord((prev) => (prev ? { ...prev, review: next } : prev));
+      setEditingReview(false);
+    } finally {
+      setReviewSaving(false);
+    }
+  };
+
   if (!record) return null;
 
   const perf = record.performances;
@@ -139,9 +161,6 @@ export default function RecordDetailPage() {
             {record.category === "book" && record.view_start && record.view_end
               ? `${record.view_start} ~ ${record.view_end}`
               : recordDate(record)}
-            {record.show_number && record.show_number > 1 && (
-              <span className="ml-2 text-xs text-zinc-400">{record.show_number}번째 관람</span>
-            )}
             {record.read_count && record.read_count > 1 && (
               <span className="ml-2 text-xs text-zinc-400">{record.read_count}번째 읽기</span>
             )}
@@ -173,7 +192,7 @@ export default function RecordDetailPage() {
           )}
         </section>
 
-        {perf && (perf.venue || perf.cast || record.seat || record.show_time) && (
+        {perf && (perf.venue || recordCast(record).length > 0 || record.seat || record.show_time) && (
           <section className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-semibold text-zinc-700">공연 정보</h2>
             {record.show_time && (
@@ -205,11 +224,11 @@ export default function RecordDetailPage() {
                 <p className="text-sm">{record.seat}</p>
               </div>
             )}
-            {perf.cast && perf.cast.length > 0 && (
+            {recordCast(record).length > 0 && (
               <div>
                 <p className="text-xs text-zinc-400">출연진</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {perf.cast.map((name) => (
+                  {recordCast(record).map((name) => (
                     <span key={name} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
                       {name}
                     </span>
@@ -278,12 +297,59 @@ export default function RecordDetailPage() {
           </section>
         )}
 
-        {record.review && (
+        {/* 아직 안 본 기록에는 감상평 칸을 띄우지 않는다 (수정 화면과 동일한 기준) */}
+        {record.status === "done" && (
           <section className="rounded-2xl bg-white p-5 shadow-sm">
-            <h2 className="mb-2 text-sm font-semibold text-zinc-700">감상평</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
-              {record.review}
-            </p>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-zinc-700">감상평</h2>
+              {record.review && !editingReview && (
+                <button onClick={openReview} className="text-xs font-medium text-zinc-400 hover:text-zinc-600">
+                  수정
+                </button>
+              )}
+            </div>
+
+            {/* 감상평이 없으면 곧바로 입력칸을 띄운다 (한 번 더 누르지 않도록) */}
+            {editingReview || !record.review ? (
+              <div className="space-y-2">
+                <textarea
+                  autoFocus={editingReview}
+                  value={reviewDraft}
+                  onChange={(e) => setReviewDraft(e.target.value)}
+                  rows={5}
+                  placeholder={
+                    record.category === "performance"
+                      ? "이 공연은 어땠나요?"
+                      : record.category === "movie"
+                        ? "이 영화는 어땠나요?"
+                        : "이 책은 어땠나요?"
+                  }
+                  className="w-full resize-none rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400"
+                />
+                <div className="flex justify-end gap-2">
+                  {record.review && (
+                    <button
+                      onClick={() => setEditingReview(false)}
+                      disabled={reviewSaving}
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+                  )}
+                  <button
+                    onClick={saveReview}
+                    disabled={reviewSaving || (!reviewDraft.trim() && !record.review)}
+                    className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-700 disabled:opacity-40"
+                  >
+                    {reviewSaving ? "저장 중..." : "저장"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
+                {record.review}
+              </p>
+            )}
           </section>
         )}
       </main>

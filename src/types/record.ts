@@ -70,6 +70,7 @@ export interface CulturalRecord {
   show_time: string | null;
   seat: string | null;
   show_number: number | null;
+  cast: string[] | null;       // 그날 실제로 본 배우 (공연 전체 출연진은 performances.cast)
   venue: string | null;        // 영화관 (영화)
   read_count: number | null;   // 책 회독수
   is_public: boolean;
@@ -84,6 +85,11 @@ export interface CulturalRecord {
 /** 캘린더/정렬에 사용할 대표 날짜: 책은 완독일, 나머지는 관람일 */
 export function recordDate(r: CulturalRecord): string | null {
   return r.view_end ?? r.view_start;
+}
+
+/** 표시·집계용 출연진: 그날 본 배우가 기록돼 있으면 그걸, 없으면 공연 전체 출연진 */
+export function recordCast(r: CulturalRecord): string[] {
+  return r.cast ?? r.performances?.cast ?? [];
 }
 
 export const CATEGORY_LABEL: Record<CategoryType, string> = {

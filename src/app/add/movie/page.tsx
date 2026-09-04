@@ -53,7 +53,6 @@ export default function AddMoviePage() {
             }}
             extraPayload={{ movie: { tmdb_id: selected.tmdb_id, genres: selected.genres, cast: selected.cast } }}
             showVenue
-            showShowNumber
           />
         )}
       </main>

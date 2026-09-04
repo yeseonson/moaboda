@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, recordDate, SUB_CATEGORY_LABEL } from "@/types/record";
+import { CategoryType, CulturalRecord, recordCast, recordDate, SUB_CATEGORY_LABEL } from "@/types/record";
 import PageHeader from "@/components/layout/PageHeader";
 
 const CAT_COLOR: Record<CategoryType, string> = {
@@ -413,7 +413,7 @@ export default function ProfilePage() {
   const castStats = useMemo(() => {
     const c: Record<string, number> = {};
     for (const r of donePerfRecords)
-      for (const name of r.performances?.cast ?? []) c[name] = (c[name] ?? 0) + 1;
+      for (const name of recordCast(r)) c[name] = (c[name] ?? 0) + 1;
     return Object.entries(c).sort(([, a], [, b]) => b - a).slice(0, 10);
   }, [donePerfRecords]);
 

@@ -42,7 +42,6 @@ interface Props {
   subCategory: SubCategoryType;
   onSubCategoryChange?: (v: SubCategoryType) => void;
   searchResult: SearchResult | null;
-  defaultShowNumber?: number;
 }
 
 const CAST_STORAGE_KEY = "moaboda_cast";
@@ -60,7 +59,7 @@ function saveCast(names: string[]) {
   } catch {}
 }
 
-export default function RecordForm({ subCategory, onSubCategoryChange, searchResult, defaultShowNumber = 1 }: Props) {
+export default function RecordForm({ subCategory, onSubCategoryChange, searchResult }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [castSuggestions, setCastSuggestions] = useState<string[]>([]);
@@ -83,7 +82,6 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
     selectedCast: [] as string[],
     extraCast: [] as string[],
     seat: "",
-    show_number: String(defaultShowNumber),
     show_time: "",
     duration: searchResult?.runtime ? String(parseInt(searchResult.runtime)) : "",
   });
@@ -124,10 +122,10 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
         poster_url: searchResult?.poster_url ?? null,
         show_time: form.show_time || null,
         seat: form.seat || null,
-        show_number: form.show_number ? Number(form.show_number) : null,
+        // 출연진은 그날 본 배우라 기록에 저장한다 (공연 카탈로그를 덮어쓰지 않도록)
+        cast: cast.length > 0 ? cast : null,
         performance: {
           venue: form.venue || null,
-          cast: cast.length > 0 ? cast : null,
           duration: form.duration || null,
           period_start: periodStart || null,
           period_end: periodEnd || null,
