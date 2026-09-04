@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import RecentRecords from "@/components/record/RecentRecords";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -7,9 +8,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-20">
-      <header className="sticky top-0 z-10 bg-white px-4 py-4 shadow-sm">
-        <h1 className="text-xl font-bold">모아보다</h1>
-      </header>
+      <PageHeader />
 
       <main className="mx-auto max-w-lg space-y-6 p-4">
         <section className="rounded-2xl bg-white p-5 shadow-sm">

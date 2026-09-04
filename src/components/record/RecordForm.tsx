@@ -14,6 +14,13 @@ function toInputDate(kopisDate: string | null | undefined): string {
   return kopisDate.replace(/\./g, "-");
 }
 
+function defaultViewDate(periodStart: string, periodEnd: string): string {
+  const today = new Date().toISOString().split("T")[0];
+  if (!periodStart) return today;
+  if (today >= periodStart && (!periodEnd || today <= periodEnd)) return today;
+  return periodStart;
+}
+
 // "19:00" + "90분" → "20:30"
 function calcEndTime(startTime: string, duration: string): string | null {
   const mins = parseInt(duration);
@@ -35,6 +42,7 @@ interface Props {
   subCategory: SubCategoryType;
   onSubCategoryChange?: (v: SubCategoryType) => void;
   searchResult: SearchResult | null;
+  defaultShowNumber?: number;
 }
 
 const CAST_STORAGE_KEY = "moaboda_cast";
@@ -52,7 +60,7 @@ function saveCast(names: string[]) {
   } catch {}
 }
 
-export default function RecordForm({ subCategory, onSubCategoryChange, searchResult }: Props) {
+export default function RecordForm({ subCategory, onSubCategoryChange, searchResult, defaultShowNumber = 1 }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [castSuggestions, setCastSuggestions] = useState<string[]>([]);
@@ -68,14 +76,14 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
 
   const [form, setForm] = useState({
     title: searchResult?.title ?? "",
-    view_date: periodStart || new Date().toISOString().split("T")[0],
+    view_start: defaultViewDate(periodStart, periodEnd),
     rating: 0,
     review: "",
     venue: searchResult?.venue ?? "",
     selectedCast: [] as string[],
     extraCast: [] as string[],
     seat: "",
-    show_number: "",
+    show_number: String(defaultShowNumber),
     show_time: "",
     duration: searchResult?.runtime ? String(parseInt(searchResult.runtime)) : "",
   });
@@ -84,7 +92,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const isFuture = (() => {
-    const [y, mo, d] = form.view_date.split("-").map(Number);
+    const [y, mo, d] = form.view_start.split("-").map(Number);
     const [h, m] = form.show_time ? form.show_time.split(":").map(Number) : [0, 0];
     return new Date(y, mo - 1, d, h, m) > new Date();
   })();
@@ -99,25 +107,27 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || !form.view_date) return;
+    if (!form.title || !form.view_start) return;
     setSubmitting(true);
     try {
       const cast = [...form.selectedCast, ...form.extraCast];
       if (form.extraCast.length > 0) saveCast(form.extraCast);
+      const status = isFuture ? "planned" : "done";
       await api.records.create({
         category: "performance",
         sub_category: subCategory,
         title: form.title,
-        view_date: form.view_date,
-        rating: form.rating || null,
-        review: form.review || null,
+        view_start: form.view_start,
+        status,
+        rating: isFuture ? null : (form.rating || null),
+        review: isFuture ? null : (form.review || null),
         poster_url: searchResult?.poster_url ?? null,
+        show_time: form.show_time || null,
+        seat: form.seat || null,
+        show_number: form.show_number ? Number(form.show_number) : null,
         performance: {
           venue: form.venue || null,
           cast: cast.length > 0 ? cast : null,
-          seat: form.seat || null,
-          show_number: form.show_number ? Number(form.show_number) : null,
-          show_time: form.show_time || null,
           duration: form.duration || null,
           period_start: periodStart || null,
           period_end: periodEnd || null,
@@ -188,10 +198,10 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
         <input
           required
           type="date"
-          value={form.view_date}
+          value={form.view_start}
           min={periodStart || undefined}
           max={periodEnd || undefined}
-          onChange={(e) => set("view_date", e.target.value)}
+          onChange={(e) => set("view_start", e.target.value)}
           className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400"
         />
       </div>

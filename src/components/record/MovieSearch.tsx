@@ -10,6 +10,7 @@ export interface MovieResult {
   poster_url: string | null;
   overview: string | null;
   genres: string[];
+  cast: string[];
 }
 
 interface Props {
@@ -68,7 +69,15 @@ export default function MovieSearch({ onSelect }: Props) {
           {results.map((movie) => (
             <li key={movie.tmdb_id}>
               <button
-                onClick={() => onSelect(movie)}
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/search/movies/${movie.tmdb_id}`);
+                    const data = await res.json();
+                    onSelect({ ...movie, cast: data.cast ?? [] });
+                  } catch {
+                    onSelect({ ...movie, cast: [] });
+                  }
+                }}
                 className="flex w-full items-center gap-3 rounded-xl border border-zinc-100 bg-white p-3 text-left hover:border-zinc-300 transition"
               >
                 {movie.poster_url ? (

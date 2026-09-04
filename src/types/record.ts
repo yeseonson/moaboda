@@ -1,55 +1,94 @@
-export type CategoryType = "movie" | "performance" | "exhibition" | "book";
+export type CategoryType = "movie" | "performance" | "book";
 export type SubCategoryType = "musical" | "play" | "concert" | "etc";
+export type StatusType = "want" | "in_progress" | "done" | "planned";
 
-export interface PerformanceDetail {
-  record_id: string;
-  venue: string | null;
-  cast: string[] | null;
-  seat: string | null;
-  show_number: number | null;
-  show_time: string | null;
-  duration: string | null;
-  period_start: string | null;
-  period_end: string | null;
-  kopis_id: string | null;
-}
+export const STATUS_LABEL: Record<StatusType, string> = {
+  want: "보고 싶어요",
+  in_progress: "보는 중",
+  planned: "관람 예정",
+  done: "봤어요",
+};
 
-export interface MovieDetail {
-  record_id: string;
+export const STATUS_COLOR: Record<StatusType, string> = {
+  want: "bg-pink-50 text-pink-500",
+  in_progress: "bg-blue-50 text-blue-500",
+  planned: "bg-violet-50 text-violet-500",
+  done: "bg-zinc-100 text-zinc-500",
+};
+
+// ── Works (정규화된 작품 정보) ────────────────────────────────
+
+export interface MovieWork {
+  id: string;
   tmdb_id: number | null;
+  title: string;
+  poster_url: string | null;
   genres: string[] | null;
+  cast: string[] | null;
 }
 
-export interface BookDetail {
-  record_id: string;
+export interface BookWork {
+  id: string;
   isbn: string | null;
+  title: string;
+  poster_url: string | null;
   author: string | null;
   publisher: string | null;
   genre: string | null;
 }
+
+export interface PerformanceWork {
+  id: string;
+  kopis_id: string | null;
+  title: string;
+  poster_url: string | null;
+  venue: string | null;
+  cast: string[] | null;
+  duration: string | null;
+  period_start: string | null;
+  period_end: string | null;
+}
+
+// ── CulturalRecord ────────────────────────────────────────────
 
 export interface CulturalRecord {
   id: string;
   user_id: string;
   category: CategoryType;
   sub_category: SubCategoryType | null;
+  movie_id: string | null;
+  book_id: string | null;
+  performance_id: string | null;
   title: string;
-  view_date: string;
+  poster_url: string | null;
+  view_start: string | null;
+  view_end: string | null;
+  status: StatusType;
   rating: number | null;
   review: string | null;
-  poster_url: string | null;
+  // 관람별 정보 (records 테이블)
+  show_time: string | null;
+  seat: string | null;
+  show_number: number | null;
+  venue: string | null;        // 영화관 (영화)
+  read_count: number | null;   // 책 회독수
   is_public: boolean;
   created_at: string;
   updated_at: string;
-  performances: PerformanceDetail | null;
-  movies: MovieDetail | null;
-  books: BookDetail | null;
+  // 조인된 작품 정보
+  movies: MovieWork | null;
+  books: BookWork | null;
+  performances: PerformanceWork | null;
+}
+
+/** 캘린더/정렬에 사용할 대표 날짜: 책은 완독일, 나머지는 관람일 */
+export function recordDate(r: CulturalRecord): string | null {
+  return r.view_end ?? r.view_start;
 }
 
 export const CATEGORY_LABEL: Record<CategoryType, string> = {
   movie: "영화",
   performance: "공연",
-  exhibition: "전시",
   book: "책",
 };
 
@@ -66,3 +105,8 @@ export const SUB_CATEGORY_COLOR: Record<SubCategoryType, string> = {
   concert: "bg-orange-100 text-orange-800",
   etc: "bg-gray-100 text-gray-700",
 };
+
+// 하위 호환 alias (기존 코드에서 MovieDetail 등으로 참조하는 경우)
+export type MovieDetail = MovieWork;
+export type BookDetail = BookWork;
+export type PerformanceDetail = PerformanceWork;

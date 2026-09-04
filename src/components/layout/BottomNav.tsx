@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/", label: "홈", icon: "⊞" },
   { href: "/calendar", label: "캘린더", icon: "◻" },
-  { href: "/add", label: "기록", icon: "+" },
   { href: "/profile", label: "통계", icon: "○" },
 ];
 

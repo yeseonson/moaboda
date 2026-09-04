@@ -52,7 +52,7 @@ export default function PerformanceSearch({ onSelect }: Props) {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="공연 제목 입력..."
+        placeholder="공연 제목 입력"
         className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400"
       />
 
@@ -68,7 +68,9 @@ export default function PerformanceSearch({ onSelect }: Props) {
                 onClick={async () => {
                   setSelecting(r.kopis_id);
                   try {
-                    const detail = await api.search.performanceDetail(r.kopis_id);
+                    const detail = await api.search.performanceDetail(
+                      r.kopis_id,
+                    );
                     onSelect({ ...r, ...detail });
                   } catch {
                     onSelect(r);

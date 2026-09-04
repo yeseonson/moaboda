@@ -3,27 +3,31 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, SUB_CATEGORY_LABEL } from "@/types/record";
+import { CategoryType, CulturalRecord, STATUS_COLOR, STATUS_LABEL, SUB_CATEGORY_LABEL, recordDate } from "@/types/record";
+import PageHeader from "@/components/layout/PageHeader";
 
 const DOT_COLOR: Record<CategoryType, string> = {
   performance: "bg-violet-400",
   movie: "bg-blue-400",
   book: "bg-pink-400",
-  exhibition: "bg-green-400",
 };
 
 const DOT_HEX: Record<CategoryType, string> = {
   performance: "#a78bfa",
   movie: "#60a5fa",
   book: "#f472b6",
-  exhibition: "#4ade80",
 };
+
+const CALENDAR_CATEGORIES: { value: CategoryType; label: string }[] = [
+  { value: "performance", label: "공연" },
+  { value: "movie", label: "영화" },
+  { value: "book", label: "책" },
+];
 
 const CATEGORY_LABEL: Record<CategoryType, string> = {
   performance: "공연",
   movie: "영화",
   book: "책",
-  exhibition: "전시",
 };
 
 export default function CalendarPage() {
@@ -43,16 +47,18 @@ export default function CalendarPage() {
   const recordsByDate = useMemo(() => {
     const map: Record<string, CulturalRecord[]> = {};
     for (const r of records) {
-      if (!map[r.view_date]) map[r.view_date] = [];
-      map[r.view_date].push(r);
+      const d = recordDate(r);
+      if (!d) continue;
+      if (!map[d]) map[d] = [];
+      map[d].push(r);
     }
     return map;
   }, [records]);
 
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
   const monthRecords = useMemo(
-    () => records.filter((r) => r.view_date.startsWith(monthPrefix))
-           .sort((a, b) => a.view_date.localeCompare(b.view_date)),
+    () => records.filter((r) => recordDate(r)?.startsWith(monthPrefix))
+           .sort((a, b) => (recordDate(a) ?? "").localeCompare(recordDate(b) ?? "")),
     [records, monthPrefix]
   );
 
@@ -76,9 +82,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-20">
-      <header className="sticky top-0 z-10 bg-white px-4 py-4 shadow-sm">
-        <h1 className="text-xl font-bold">캘린더</h1>
-      </header>
+      <PageHeader />
 
       <main className="mx-auto max-w-lg p-4 space-y-4">
         <section className="rounded-2xl bg-white p-4 shadow-sm">
@@ -125,7 +129,7 @@ export default function CalendarPage() {
         </section>
 
         <div className="flex gap-2 px-1">
-          {(Object.entries(CATEGORY_LABEL) as [CategoryType, string][]).map(([cat, label]) => {
+          {CALENDAR_CATEGORIES.map(({ value: cat, label }) => {
             const active = filterCategory === cat;
             return (
               <button
@@ -168,7 +172,7 @@ export default function CalendarPage() {
                       <img src={r.poster_url} alt={r.title} className="h-14 w-10 shrink-0 rounded-lg object-cover" />
                     ) : (
                       <div className={`flex h-14 w-10 shrink-0 items-center justify-center rounded-lg text-lg ${DOT_COLOR[r.category].replace("bg-", "bg-").replace("-400", "-100")}`}>
-                        {r.category === "movie" ? "🎬" : r.category === "book" ? "📚" : r.category === "exhibition" ? "🖼️" : "🎭"}
+                        {r.category === "movie" ? "🎬" : r.category === "book" ? "📚" : "🎭"}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
@@ -176,9 +180,24 @@ export default function CalendarPage() {
                         <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
                           {r.sub_category ? SUB_CATEGORY_LABEL[r.sub_category] : CATEGORY_LABEL[r.category]}
                         </span>
+                        {r.status !== "done" && (
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_COLOR[r.status]}`}>
+                            {STATUS_LABEL[r.status]}
+                          </span>
+                        )}
                         <p className="truncate text-sm font-medium">{r.title}</p>
                       </div>
-                      <p className="mt-0.5 text-xs text-zinc-400">{r.view_date}</p>
+                      <p className="mt-0.5 text-xs text-zinc-400">{recordDate(r)}</p>
+                      {r.category === "movie" && r.movies?.genres && r.movies.genres.length > 0 && (
+                        <p className="mt-0.5 truncate text-xs text-zinc-400">
+                          {r.movies.genres.slice(0, 3).join(" · ")}
+                        </p>
+                      )}
+                      {r.category === "book" && r.books?.genre && (
+                        <p className="mt-0.5 truncate text-xs text-zinc-400">
+                          {r.books.genre}
+                        </p>
+                      )}
                     </div>
                   </Link>
                 </li>

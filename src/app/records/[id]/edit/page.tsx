@@ -3,16 +3,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, SubCategoryType } from "@/types/record";
+import { CategoryType, CulturalRecord, StatusType } from "@/types/record";
 import StarRating from "@/components/record/StarRating";
 import TagInput from "@/components/record/TagInput";
 
-const DATE_LABEL: Record<CategoryType, string> = {
-  performance: "관람일",
-  movie: "관람일",
-  book: "완독일",
-  exhibition: "관람일",
-};
+const STATUS_OPTS: { value: StatusType; label: string }[] = [
+  { value: "want", label: "보고 싶어요" },
+  { value: "in_progress", label: "보는 중" },
+  { value: "done", label: "봤어요" },
+];
 
 export default function EditRecordPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,9 +19,12 @@ export default function EditRecordPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [category, setCategory] = useState<CategoryType>("performance");
+  const [status, setStatus] = useState<StatusType>("done");
+  const [genreInput, setGenreInput] = useState("");
   const [form, setForm] = useState({
     title: "",
-    view_date: "",
+    view_start: "",
+    view_end: "",
     rating: 0,
     review: "",
     venue: "",
@@ -37,16 +39,23 @@ export default function EditRecordPage() {
     api.records.get(id).then((record: CulturalRecord) => {
       const perf = record.performances;
       setCategory(record.category);
+      setStatus(record.status ?? "done");
+      setGenreInput(
+        record.category === "movie" ? (record.movies?.genres?.join(", ") ?? "")
+        : record.category === "book" ? (record.books?.genre ?? "")
+        : ""
+      );
       setForm({
         title: record.title,
-        view_date: record.view_date,
+        view_start: record.view_start ?? "",
+        view_end: record.view_end ?? "",
         rating: record.rating ?? 0,
         review: record.review ?? "",
-        venue: perf?.venue ?? "",
+        venue: record.category === "performance" ? (perf?.venue ?? "") : (record.venue ?? ""),
         cast: perf?.cast ?? [],
-        seat: perf?.seat ?? "",
-        show_number: perf?.show_number?.toString() ?? "",
-        show_time: perf?.show_time ?? "",
+        seat: record.seat ?? "",
+        show_number: record.show_number?.toString() ?? "",
+        show_time: record.show_time ?? "",
         duration: perf?.duration ? String(parseInt(perf.duration)) : "",
       });
     }).finally(() => setLoading(false));
@@ -57,13 +66,19 @@ export default function EditRecordPage() {
 
   const isPerformance = category === "performance";
   const isMovie = category === "movie";
+  const isBook = category === "book";
+  const isDone = status === "done";
+  const isWant = status === "want";
+  const isInProgress = status === "in_progress";
 
   const isFuture = (() => {
-    if (!form.view_date) return false;
-    const [y, mo, d] = form.view_date.split("-").map(Number);
+    if (!form.view_start) return false;
+    const [y, mo, d] = form.view_start.split("-").map(Number);
     const [h, m] = form.show_time ? form.show_time.split(":").map(Number) : [0, 0];
     return new Date(y, mo - 1, d, h, m) > new Date();
   })();
+
+  const perfStatus = isFuture ? "planned" : "done";
 
   const [castSuggestions, setCastSuggestions] = useState<string[]>([]);
   useEffect(() => {
@@ -75,24 +90,33 @@ export default function EditRecordPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const resolvedStatus = isPerformance ? perfStatus : status;
+      const showRatingReview = isPerformance ? !isFuture : isDone;
       await api.records.update(id, {
         title: form.title,
-        view_date: form.view_date,
-        rating: form.rating || null,
-        review: form.review || null,
+        view_start: isWant ? null : (form.view_start || null),
+        view_end: (isBook && isDone) ? (form.view_end || null) : null,
+        status: resolvedStatus,
+        rating: showRatingReview ? (form.rating || null) : null,
+        review: showRatingReview ? (form.review || null) : null,
         ...(isPerformance ? {
+          show_time: form.show_time || null,
+          seat: form.seat || null,
+          show_number: form.show_number ? Number(form.show_number) : null,
           performance: {
             venue: form.venue || null,
             cast: form.cast.length > 0 ? form.cast : null,
-            seat: form.seat || null,
-            show_number: form.show_number ? Number(form.show_number) : null,
-            show_time: form.show_time || null,
             duration: form.duration || null,
           },
         } : isMovie ? {
-          performance: {
-            venue: form.venue || null,
-            show_number: form.show_number ? Number(form.show_number) : null,
+          venue: form.venue || null,
+          show_number: form.show_number ? Number(form.show_number) : null,
+          movie: {
+            ...(genreInput.trim() ? { genres: genreInput.split(",").map(g => g.trim()).filter(Boolean) } : {}),
+          },
+        } : isBook ? {
+          book: {
+            ...(genreInput.trim() ? { genre: genreInput.trim() } : {}),
           },
         } : {}),
       });
@@ -112,23 +136,63 @@ export default function EditRecordPage() {
       </header>
 
       <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-5 p-4">
+
+        {(isMovie || isBook) && (
+          <div className="flex rounded-xl border border-zinc-200 p-1 gap-1">
+            {STATUS_OPTS.map(opt => (
+              <button key={opt.value} type="button" onClick={() => setStatus(opt.value)}
+                className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
+                  status === opt.value ? "bg-zinc-900 text-white" : "text-zinc-500 hover:text-zinc-700"
+                }`}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-1">
           <label className="text-xs font-medium text-zinc-500">제목 *</label>
           <input required value={form.title} onChange={(e) => set("title", e.target.value)}
             className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-500">{DATE_LABEL[category]} *</label>
-          <input required type="date" value={form.view_date} onChange={(e) => set("view_date", e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
-        </div>
-        {!isFuture && (
+
+        {(isPerformance || !isWant) && (
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-zinc-500">
+              {isPerformance ? "관람일" : isBook ? "시작일" : "관람일"} *
+            </label>
+            <input required type="date" value={form.view_start}
+              onChange={(e) => set("view_start", e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
+        )}
+        {isBook && isDone && (
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-zinc-500">완독일</label>
+            <input type="date" value={form.view_end}
+              min={form.view_start || undefined}
+              onChange={(e) => set("view_end", e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
+        )}
+
+        {(isMovie || isBook) && (
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-zinc-500">장르</label>
+            <input value={genreInput} onChange={(e) => setGenreInput(e.target.value)}
+              placeholder={isMovie ? "예) 액션, SF" : "예) 소설"}
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
+        )}
+
+        {(isPerformance ? !isFuture : isDone) && (
           <div className="space-y-1">
             <label className="text-xs font-medium text-zinc-500">평점</label>
             <StarRating value={form.rating} onChange={(v) => set("rating", v)} />
           </div>
         )}
-        {(isPerformance || isMovie) && (
+
+        {(isPerformance || (isMovie && !isWant)) && (
           <div className="space-y-1">
             <label className="text-xs font-medium text-zinc-500">{isPerformance ? "극장" : "영화관"}</label>
             <input value={form.venue} onChange={(e) => set("venue", e.target.value)}
@@ -136,6 +200,7 @@ export default function EditRecordPage() {
               className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
           </div>
         )}
+
         {isPerformance && (
           <>
             <div className="space-y-1">
@@ -170,17 +235,20 @@ export default function EditRecordPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-zinc-500">출연진</label>
-              <TagInput value={form.cast} onChange={(tags) => set("cast", tags)} placeholder="이름 입력 후 Enter" suggestions={castSuggestions} />
+              <TagInput value={form.cast} onChange={(tags) => set("cast", tags)}
+                placeholder="이름 입력 후 Enter" suggestions={castSuggestions} />
             </div>
           </>
         )}
-        {!isFuture && (
+
+        {(isPerformance ? !isFuture : isDone) && (
           <div className="space-y-1">
             <label className="text-xs font-medium text-zinc-500">감상평</label>
             <textarea value={form.review} onChange={(e) => set("review", e.target.value)}
               rows={4} className="w-full resize-none rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
           </div>
         )}
+
         <button type="submit" disabled={submitting}
           className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50">
           {submitting ? "저장 중..." : "수정 완료"}

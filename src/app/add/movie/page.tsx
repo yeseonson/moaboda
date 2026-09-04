@@ -48,8 +48,10 @@ export default function AddMoviePage() {
               title: selected.title,
               poster_url: selected.poster_url,
               subtitle: selected.release_date ? `${selected.release_date.slice(0, 4)}년` : undefined,
+              tags: selected.genres?.length ? selected.genres : undefined,
+              cast: selected.cast?.length ? selected.cast : undefined,
             }}
-            extraPayload={{ movie: { tmdb_id: selected.tmdb_id, genres: selected.genres } }}
+            extraPayload={{ movie: { tmdb_id: selected.tmdb_id, genres: selected.genres, cast: selected.cast } }}
             showVenue
             showShowNumber
           />

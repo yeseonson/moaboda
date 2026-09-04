@@ -3,10 +3,24 @@
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = [
-  { href: "/add/performance", label: "공연", sub: "뮤지컬 · 연극 · 콘서트", emoji: "🎭" },
-  { href: "/add/movie", label: "영화", sub: "TMDB 검색 연동", emoji: "🎬" },
-  { href: "/add/book", label: "책", sub: "알라딘 검색 연동", emoji: "📚" },
-  { href: "/add/exhibition", label: "전시", sub: "직접 입력", emoji: "🖼️" },
+  {
+    href: "/add/performance",
+    label: "공연",
+    sub: "무대 위의 순간을 기록해요.",
+    emoji: "🎭",
+  },
+  {
+    href: "/add/movie",
+    label: "영화",
+    sub: "스크린 속 감동을 담아요.",
+    emoji: "🎬",
+  },
+  {
+    href: "/add/book",
+    label: "책",
+    sub: "읽은 책의 기억을 남겨요.",
+    emoji: "📚",
+  },
 ];
 
 export default function AddCategoryPage() {

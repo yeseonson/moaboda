@@ -48,6 +48,7 @@ export default function AddBookPage() {
               title: selected.title,
               poster_url: selected.poster_url,
               subtitle: [selected.author, selected.publisher].filter(Boolean).join(" · ") || undefined,
+              tags: selected.category ? [selected.category] : undefined,
             }}
             extraPayload={{ book: { isbn: selected.isbn, author: selected.author, publisher: selected.publisher, genre: selected.category } }}
           />

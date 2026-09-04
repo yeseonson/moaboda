@@ -6,9 +6,19 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import {
   CulturalRecord,
+  STATUS_COLOR,
+  STATUS_LABEL,
+  StatusType,
   SUB_CATEGORY_COLOR,
   SUB_CATEGORY_LABEL,
+  recordDate,
 } from "@/types/record";
+
+const STATUS_OPTS: { value: StatusType; label: string }[] = [
+  { value: "want", label: "보고 싶어요" },
+  { value: "in_progress", label: "보는 중" },
+  { value: "done", label: "봤어요" },
+];
 
 export default function RecordDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +26,7 @@ export default function RecordDetailPage() {
   const [record, setRecord] = useState<CulturalRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   useEffect(() => {
     api.records
@@ -36,6 +47,31 @@ export default function RecordDetailPage() {
     }
   };
 
+  const handleStatusChange = async (newStatus: StatusType) => {
+    if (!record || statusSaving) return;
+    const today = new Date().toISOString().split("T")[0];
+    const update: Partial<CulturalRecord> & { status: StatusType } = { status: newStatus };
+    if (newStatus === "want") {
+      update.view_start = null;
+      update.view_end = null;
+    } else if (newStatus === "done") {
+      if (record.category === "movie" && !record.view_start) update.view_start = today;
+      if (record.category === "book") {
+        if (!record.view_start) update.view_start = today;
+        if (!record.view_end) update.view_end = today;
+      }
+    }
+    setRecord((prev) => (prev ? { ...prev, ...update } : prev));
+    setStatusSaving(true);
+    try {
+      await api.records.update(id, update);
+    } catch {
+      setRecord((prev) => (prev ? { ...prev, status: record.status } : prev));
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-50">
@@ -51,7 +87,10 @@ export default function RecordDetailPage() {
   if (!record) return null;
 
   const perf = record.performances;
+  const mov = record.movies;
+  const bk = record.books;
   const rating = record.rating ?? 0;
+  const isMovieOrBook = record.category === "movie" || record.category === "book";
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-10">
@@ -91,35 +130,62 @@ export default function RecordDetailPage() {
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-xl font-bold">{record.title}</h1>
             {record.sub_category && (
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${SUB_CATEGORY_COLOR[record.sub_category]}`}
-              >
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${SUB_CATEGORY_COLOR[record.sub_category]}`}>
                 {SUB_CATEGORY_LABEL[record.sub_category]}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-zinc-500">{record.view_date}</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            {record.category === "book" && record.view_start && record.view_end
+              ? `${record.view_start} ~ ${record.view_end}`
+              : recordDate(record)}
+            {record.show_number && record.show_number > 1 && (
+              <span className="ml-2 text-xs text-zinc-400">{record.show_number}번째 관람</span>
+            )}
+            {record.read_count && record.read_count > 1 && (
+              <span className="ml-2 text-xs text-zinc-400">{record.read_count}번째 읽기</span>
+            )}
+          </p>
           {rating > 0 && (
             <p className="mt-2 text-lg text-yellow-400">
               {"★".repeat(rating)}
               {"☆".repeat(5 - rating)}
             </p>
           )}
+
+          {isMovieOrBook && (
+            <div className={`mt-4 flex gap-1 rounded-xl border border-zinc-200 p-1 transition-opacity ${statusSaving ? "opacity-50" : ""}`}>
+              {STATUS_OPTS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleStatusChange(opt.value)}
+                  disabled={statusSaving}
+                  className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
+                    record.status === opt.value
+                      ? "bg-zinc-900 text-white"
+                      : "text-zinc-500 hover:text-zinc-700"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
-        {perf && (perf.venue || perf.cast || perf.seat || perf.show_time) && (
+        {perf && (perf.venue || perf.cast || record.seat || record.show_time) && (
           <section className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-semibold text-zinc-700">공연 정보</h2>
-            {perf.show_time && (
+            {record.show_time && (
               <div>
                 <p className="text-xs text-zinc-400">관람 시간</p>
                 <p className="text-sm">
-                  {perf.show_time}
+                  {record.show_time}
                   {perf.duration &&
                     (() => {
                       const mins = parseInt(perf.duration);
                       if (isNaN(mins)) return ` (${perf.duration})`;
-                      const [h, m] = perf.show_time!.split(":").map(Number);
+                      const [h, m] = record.show_time!.split(":").map(Number);
                       const total = h * 60 + m + mins;
                       const end = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
                       return ` ~ ${end}`;
@@ -133,10 +199,10 @@ export default function RecordDetailPage() {
                 <p className="text-sm">{perf.venue}</p>
               </div>
             )}
-            {perf.seat && (
+            {record.seat && (
               <div>
                 <p className="text-xs text-zinc-400">좌석</p>
-                <p className="text-sm">{perf.seat}</p>
+                <p className="text-sm">{record.seat}</p>
               </div>
             )}
             {perf.cast && perf.cast.length > 0 && (
@@ -144,14 +210,69 @@ export default function RecordDetailPage() {
                 <p className="text-xs text-zinc-400">출연진</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {perf.cast.map((name) => (
-                    <span
-                      key={name}
-                      className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700"
-                    >
+                    <span key={name} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
                       {name}
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {record.category === "movie" && mov && (mov.genres?.length || mov.cast?.length) && (
+          <section className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
+            <h2 className="text-sm font-semibold text-zinc-700">영화 정보</h2>
+            {mov.genres && mov.genres.length > 0 && (
+              <div>
+                <p className="text-xs text-zinc-400">장르</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {mov.genres.map((g) => (
+                    <span key={g} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-700">{g}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {mov.cast && mov.cast.length > 0 && (
+              <div>
+                <p className="text-xs text-zinc-400">출연진</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {mov.cast.map((name) => (
+                    <span key={name} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {record.category === "book" && bk && (bk.author || bk.publisher || bk.genre || record.read_count) && (
+          <section className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
+            <h2 className="text-sm font-semibold text-zinc-700">책 정보</h2>
+            {bk.author && (
+              <div>
+                <p className="text-xs text-zinc-400">저자</p>
+                <p className="text-sm">{bk.author}</p>
+              </div>
+            )}
+            {bk.publisher && (
+              <div>
+                <p className="text-xs text-zinc-400">출판사</p>
+                <p className="text-sm">{bk.publisher}</p>
+              </div>
+            )}
+            {bk.genre && (
+              <div>
+                <p className="text-xs text-zinc-400">장르</p>
+                <p className="text-sm">{bk.genre}</p>
+              </div>
+            )}
+            {record.read_count && (
+              <div>
+                <p className="text-xs text-zinc-400">회독</p>
+                <p className="text-sm">{record.read_count}회독</p>
               </div>
             )}
           </section>
