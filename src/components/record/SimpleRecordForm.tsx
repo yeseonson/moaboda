@@ -19,8 +19,6 @@ interface Props {
   searchMeta: SearchMeta;
   extraPayload?: Record<string, unknown>;
   showVenue?: boolean;
-  showShowNumber?: boolean;
-  defaultShowNumber?: number;
   defaultReadCount?: number;
 }
 
@@ -32,7 +30,7 @@ const STATUS_OPTS: { value: StatusType; label: string }[] = [
 
 const today = new Date().toISOString().split("T")[0];
 
-export default function SimpleRecordForm({ category, searchMeta, extraPayload, showVenue, showShowNumber, defaultShowNumber = 1, defaultReadCount = 1 }: Props) {
+export default function SimpleRecordForm({ category, searchMeta, extraPayload, showVenue, defaultReadCount = 1 }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [genreInput, setGenreInput] = useState(searchMeta.tags?.join(", ") ?? "");
@@ -44,7 +42,6 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
     rating: 0,
     review: "",
     venue: "",
-    show_number: defaultShowNumber,
     read_count: defaultReadCount,
   });
 
@@ -89,7 +86,6 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         review: isDone ? (form.review || null) : null,
         poster_url: searchMeta.poster_url,
         ...(showVenue && !isWant ? { venue: form.venue || null } : {}),
-        ...(showShowNumber && isDone ? { show_number: form.show_number } : {}),
         ...finalExtra,
       });
       router.push("/");

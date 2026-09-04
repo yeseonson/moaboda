@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, StatusType } from "@/types/record";
+import { CategoryType, CulturalRecord, StatusType, recordCast } from "@/types/record";
 import StarRating from "@/components/record/StarRating";
 import TagInput from "@/components/record/TagInput";
 
@@ -30,7 +30,6 @@ export default function EditRecordPage() {
     venue: "",
     cast: [] as string[],
     seat: "",
-    show_number: "",
     show_time: "",
     duration: "",
   });
@@ -52,9 +51,8 @@ export default function EditRecordPage() {
         rating: record.rating ?? 0,
         review: record.review ?? "",
         venue: record.category === "performance" ? (perf?.venue ?? "") : (record.venue ?? ""),
-        cast: perf?.cast ?? [],
+        cast: recordCast(record),
         seat: record.seat ?? "",
-        show_number: record.show_number?.toString() ?? "",
         show_time: record.show_time ?? "",
         duration: perf?.duration ? String(parseInt(perf.duration)) : "",
       });
@@ -102,15 +100,14 @@ export default function EditRecordPage() {
         ...(isPerformance ? {
           show_time: form.show_time || null,
           seat: form.seat || null,
-          show_number: form.show_number ? Number(form.show_number) : null,
+          // 출연진은 그날 본 배우라 기록에 저장한다 (공연 카탈로그를 덮어쓰지 않도록)
+          cast: form.cast.length > 0 ? form.cast : null,
           performance: {
             venue: form.venue || null,
-            cast: form.cast.length > 0 ? form.cast : null,
             duration: form.duration || null,
           },
         } : isMovie ? {
           venue: form.venue || null,
-          show_number: form.show_number ? Number(form.show_number) : null,
           movie: {
             ...(genreInput.trim() ? { genres: genreInput.split(",").map(g => g.trim()).filter(Boolean) } : {}),
           },

@@ -10,6 +10,7 @@ import {
   STATUS_LABEL,
   StatusType,
   SUB_CATEGORY_LABEL,
+  recordCast,
   recordDate,
 } from "@/types/record";
 
@@ -109,9 +110,9 @@ function RecordCard({
               {record.show_time && ` ${record.show_time}`}
             </p>
           )}
-          {record.performances?.cast && record.performances.cast.length > 0 && (
+          {recordCast(record).length > 0 && (
             <p className="mt-0.5 truncate text-xs text-zinc-400">
-              {record.performances.cast.join(", ")}
+              {recordCast(record).join(", ")}
             </p>
           )}
           {record.category === "movie" &&
@@ -156,6 +157,92 @@ function RecordCard({
   );
 }
 
+/** 같은 작품의 관람 기록을 묶는 키. 작품이 연결 안 된 기록은 제목으로 묶는다. */
+function workKey(r: CulturalRecord): string {
+  return r.performance_id ?? r.movie_id ?? r.book_id ?? `title:${r.title}`;
+}
+
+interface WorkGroup {
+  key: string;
+  title: string;
+  poster_url: string | null;
+  category: CategoryType;
+  sub_category: CulturalRecord["sub_category"];
+  records: CulturalRecord[];  // 하위 탭으로 걸러진 것
+  total: number;              // 상태 무관 전체 관람 수
+  plannedCount: number;
+  upcoming: string | null;    // 가장 가까운 예정 (정렬용)
+  latest: string;
+}
+
+function GroupRow({
+  group,
+  open,
+  onToggle,
+  onStatusChange,
+}: {
+  group: WorkGroup;
+  open: boolean;
+  onToggle: () => void;
+  onStatusChange: (id: string, status: StatusType) => Promise<void>;
+}) {
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 text-left transition hover:border-zinc-300"
+      >
+        {group.poster_url ? (
+          <img
+            src={group.poster_url}
+            alt={group.title}
+            className="h-16 w-12 shrink-0 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-200 text-xl">
+            {TABS.find((t) => t.key === group.category)?.icon ?? "📝"}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            {group.sub_category && (
+              <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+                {SUB_CATEGORY_LABEL[group.sub_category]}
+              </span>
+            )}
+            <p className="truncate text-sm font-medium">{group.title}</p>
+          </div>
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
+              {group.total}회
+            </span>
+            {group.plannedCount > 0 && (
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR.planned}`}>
+                예정 {group.plannedCount}
+              </span>
+            )}
+            <span className="text-xs text-zinc-400">{group.latest}</span>
+          </div>
+        </div>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-sm font-medium leading-none text-zinc-500">
+          {open ? "−" : "+"}
+        </span>
+      </button>
+
+      {open && (
+        <ul className="ml-4 space-y-2 border-l border-zinc-100 pl-3">
+          {group.records.map((r) => (
+            <li key={r.id}>
+              <RecordCard record={r} onStatusChange={onStatusChange} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function RecentRecords() {
   const [records, setRecords] = useState<CulturalRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,9 +254,23 @@ export default function RecentRecords() {
     }
   });
 
+  const [subTab, setSubTab] = useState<StatusType | "all">("all");
+  const [year, setYear] = useState<string>(() => String(new Date().getFullYear()));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
   const handleTabChange = (key: CategoryType) => {
     try { sessionStorage.setItem("home_tab", key); } catch {}
     setTab(key);
+    setExpanded(new Set());
+  };
+
+  const toggleGroup = (key: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -205,23 +306,97 @@ export default function RecentRecords() {
     }
   };
 
-  const tabRecords = useMemo(() => {
-    const filtered = records.filter((r) => r.category === tab);
-    const grouped: Partial<Record<StatusType, CulturalRecord[]>> = {};
-    for (const r of filtered) {
-      if (!grouped[r.status]) grouped[r.status] = [];
-      grouped[r.status]!.push(r);
+  const categoryRecords = useMemo(
+    () => records.filter((r) => r.category === tab),
+    [records, tab]
+  );
+
+  // 연도 -> 상태 순으로 거른다. 그래야 지난 연도에서 "관람 예정" 탭이 저절로 사라진다.
+  const years = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const r of categoryRecords) {
+      const d = recordDate(r);
+      if (d) c[d.slice(0, 4)] = (c[d.slice(0, 4)] ?? 0) + 1;
     }
-    grouped.planned?.sort((a, b) => {
-      const aKey = (a.view_start ?? "") + (a.show_time ?? "");
-      const bKey = (b.view_start ?? "") + (b.show_time ?? "");
-      return aKey.localeCompare(bKey);
+    return Object.entries(c).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [categoryRecords]);
+
+  // 올해가 없으면 가장 최근 연도로 떨어진다.
+  const activeYear =
+    year === "all" || years.some(([y]) => y === year) ? year : years[0]?.[0] ?? "all";
+
+  const yearRecords = useMemo(
+    () =>
+      activeYear === "all"
+        ? categoryRecords
+        : categoryRecords.filter((r) => (recordDate(r) ?? "").startsWith(activeYear)),
+    [categoryRecords, activeYear]
+  );
+
+  // 해당 연도에 실제로 있는 상태만 하위 탭으로 노출한다.
+  const subTabs = useMemo(() => {
+    const present = STATUS_SECTIONS.filter(({ key }) =>
+      yearRecords.some((r) => r.status === key)
+    ).map(({ key, label }) => ({
+      key: key as StatusType | "all",
+      label,
+      count: yearRecords.filter((r) => r.status === key).length,
+    }));
+    if (present.length < 2) return present;
+    return [{ key: "all" as const, label: "전체", count: yearRecords.length }, ...present];
+  }, [yearRecords]);
+
+  // 탭/연도를 옮기면 이전 하위 탭이 없을 수 있으니 렌더 시점에 보정한다.
+  const activeSubTab = subTabs.some((s) => s.key === subTab)
+    ? subTab
+    : subTabs[0]?.key ?? "all";
+
+  const groups = useMemo(() => {
+    const byWork = new Map<string, CulturalRecord[]>();
+    for (const r of yearRecords) {
+      const k = workKey(r);
+      if (!byWork.has(k)) byWork.set(k, []);
+      byWork.get(k)!.push(r);
+    }
+
+    const out: WorkGroup[] = [];
+    for (const [key, all] of byWork) {
+      const shown =
+        activeSubTab === "all" ? [...all] : all.filter((r) => r.status === activeSubTab);
+      if (shown.length === 0) continue;
+
+      shown.sort((a, b) => (recordDate(b) ?? "").localeCompare(recordDate(a) ?? ""));
+      const planned = all.filter((r) => r.status === "planned");
+      const head = shown[0];
+
+      out.push({
+        key,
+        title: head.title,
+        poster_url: head.poster_url,
+        category: head.category,
+        sub_category: head.sub_category,
+        records: shown,
+        total: all.length,
+        plannedCount: planned.length,
+        upcoming:
+          planned
+            .map((r) => (r.view_start ?? "") + (r.show_time ?? ""))
+            .sort()[0] ?? null,
+        latest: recordDate(head) ?? "",
+      });
+    }
+
+    // 예정이 남은 작품을 먼저, 가까운 순으로. "봤어요" 탭에서는 최근 관람 순.
+    const floatUpcoming = activeSubTab !== "done";
+    out.sort((a, b) => {
+      if (floatUpcoming && (a.upcoming || b.upcoming)) {
+        if (a.upcoming && b.upcoming) return a.upcoming.localeCompare(b.upcoming);
+        return a.upcoming ? -1 : 1;
+      }
+      return b.latest.localeCompare(a.latest);
     });
-    grouped.done?.sort((a, b) =>
-      (recordDate(b) ?? "").localeCompare(recordDate(a) ?? "")
-    );
-    return grouped;
-  }, [records, tab]);
+    return out;
+  }, [yearRecords, activeSubTab]);
 
   const counts = useMemo(
     () =>
@@ -241,7 +416,7 @@ export default function RecentRecords() {
     );
   }
 
-  const isEmpty = STATUS_SECTIONS.every((s) => !tabRecords[s.key]?.length);
+  const isEmpty = categoryRecords.length === 0;
 
   return (
     <div className="space-y-4">
@@ -275,24 +450,73 @@ export default function RecentRecords() {
           아직 기록이 없어요.
         </p>
       ) : (
-        <div className="space-y-5">
-          {STATUS_SECTIONS.map(({ key, label }) => {
-            const list = tabRecords[key];
-            if (!list?.length) return null;
-            const sliced = key === "done" ? list.slice(0, 10) : list;
-            return (
-              <div key={key} className="space-y-2">
-                <h3 className="text-xs font-semibold text-zinc-400">{label}</h3>
-                <ul className="space-y-2">
-                  {sliced.map((r: CulturalRecord) => (
-                    <li key={r.id}>
-                      <RecordCard record={r} onStatusChange={handleStatusChange} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+        <div className="space-y-3">
+          {years.length > 1 && (
+            <div className="flex gap-1 overflow-x-auto pb-0.5">
+              {years.map(([y, count]) => (
+                <button
+                  key={y}
+                  onClick={() => setYear(y)}
+                  className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                    activeYear === y
+                      ? "bg-zinc-200 text-zinc-900"
+                      : "text-zinc-400 hover:text-zinc-600"
+                  }`}
+                >
+                  {y}
+                  <span className="ml-1 text-[10px] opacity-60">{count}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => setYear("all")}
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                  activeYear === "all"
+                    ? "bg-zinc-200 text-zinc-900"
+                    : "text-zinc-400 hover:text-zinc-600"
+                }`}
+              >
+                전체
+                <span className="ml-1 text-[10px] opacity-60">{categoryRecords.length}</span>
+              </button>
+            </div>
+          )}
+
+          {subTabs.length > 1 && (
+            <div className="flex gap-1 overflow-x-auto pb-0.5">
+              {subTabs.map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setSubTab(key)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                    activeSubTab === key
+                      ? "bg-zinc-900 text-white"
+                      : "bg-zinc-100 text-zinc-500 hover:text-zinc-700"
+                  }`}
+                >
+                  {label} {count}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <ul className="space-y-2">
+            {groups.map((g) =>
+              g.records.length === 1 ? (
+                <li key={g.key}>
+                  <RecordCard record={g.records[0]} onStatusChange={handleStatusChange} />
+                </li>
+              ) : (
+                <li key={g.key}>
+                  <GroupRow
+                    group={g}
+                    open={expanded.has(g.key)}
+                    onToggle={() => toggleGroup(g.key)}
+                    onStatusChange={handleStatusChange}
+                  />
+                </li>
+              )
+            )}
+          </ul>
         </div>
       )}
     </div>
