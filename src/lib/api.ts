@@ -44,7 +44,8 @@ async function requireUserId(supabase: SupabaseClient): Promise<string> {
 
 /**
  * 작품 정보를 works 테이블에 반영하고 그 id 를 돌려준다.
- * 자연키(tmdb_id/isbn/kopis_id)로 기존 행을 찾으면 재사용해 카탈로그 중복을 막는다.
+ * 자연키(tmdb_id/isbn/kopis_id)의 unique 제약에 기대어 upsert 한 번으로 처리한다.
+ * 조회 없이 넣으므로 같은 작품이 동시에 두 번 저장돼도 카탈로그가 갈라지지 않는다.
  */
 async function resolveWorkId(
   supabase: SupabaseClient,
@@ -53,31 +54,20 @@ async function resolveWorkId(
   fallback: { title: unknown; poster_url: unknown }
 ): Promise<string> {
   const { table, key } = WORK_META[kind];
-  const keyValue = work[key];
+  // 값이 있는 필드만 보낸다. 폼이 장르를 안 보냈다고 기존 장르가 지워지면 안 되므로.
+  const payload = present({
+    title: fallback.title,
+    poster_url: fallback.poster_url,
+    ...work,
+  });
 
-  if (keyValue !== undefined && keyValue !== null && keyValue !== "") {
-    const { data: existing, error } = await supabase
-      .from(table)
-      .select("id")
-      .eq(key, keyValue)
-      .maybeSingle();
-    if (error) throw error;
+  // 자연키가 없으면 충돌 대상이 없으니 그냥 새로 만든다 (KOPIS 미등록 공연 등).
+  const query =
+    payload[key] === undefined
+      ? supabase.from(table).insert(payload)
+      : supabase.from(table).upsert(payload, { onConflict: key });
 
-    if (existing) {
-      const patch = present(work);
-      if (Object.keys(patch).length > 0) {
-        const { error: updateError } = await supabase.from(table).update(patch).eq("id", existing.id);
-        if (updateError) throw updateError;
-      }
-      return existing.id as string;
-    }
-  }
-
-  const { data, error } = await supabase
-    .from(table)
-    .insert({ title: fallback.title, poster_url: fallback.poster_url ?? null, ...defined(work) })
-    .select("id")
-    .single();
+  const { data, error } = await query.select("id").single();
   if (error) throw error;
   return data.id as string;
 }
