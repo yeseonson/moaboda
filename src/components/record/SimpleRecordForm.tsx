@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { describeError } from "@/lib/errors";
 import { CategoryType, OTT_PLATFORMS, StatusType } from "@/types/record";
 import StarRating from "./StarRating";
 
@@ -33,6 +34,7 @@ const today = new Date().toISOString().split("T")[0];
 export default function SimpleRecordForm({ category, searchMeta, extraPayload, showVenue, defaultReadCount = 1 }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [genreInput, setGenreInput] = useState(searchMeta.tags?.join(", ") ?? "");
   const [status, setStatus] = useState<StatusType>("done");
   const [watchMode, setWatchMode] = useState<"cinema" | "ott">("cinema");
@@ -61,6 +63,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
     if (!form.title) return;
     if (isDone && (isMovie || isBook) && !form.rating) return alert("별점을 입력해주세요.");
     setSubmitting(true);
+    setSaveError(null);
     try {
       const finalExtra = (() => {
         const base: Record<string, unknown> = { ...extraPayload };
@@ -99,6 +102,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
       router.push("/");
     } catch (err) {
       console.error(err);
+      setSaveError(describeError(err));
     } finally {
       setSubmitting(false);
     }
@@ -244,6 +248,12 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
             rows={4} placeholder="어땠나요?"
             className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400 resize-none" />
         </div>
+      )}
+
+      {saveError && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-xs text-red-600">
+          저장하지 못했어요 — {saveError}
+        </p>
       )}
 
       <button type="submit" disabled={submitting}

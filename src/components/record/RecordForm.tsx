@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { describeError } from "@/lib/errors";
 import { SubCategoryType } from "@/types/record";
 import { SearchResult } from "./PerformanceSearch";
 import StarRating from "./StarRating";
@@ -62,6 +63,7 @@ function saveCast(names: string[]) {
 export default function RecordForm({ subCategory, onSubCategoryChange, searchResult }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [castSuggestions, setCastSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -107,6 +109,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
     e.preventDefault();
     if (!form.title || !form.view_start) return;
     setSubmitting(true);
+    setSaveError(null);
     try {
       const cast = [...form.selectedCast, ...form.extraCast];
       if (form.extraCast.length > 0) saveCast(form.extraCast);
@@ -135,6 +138,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
       router.push("/");
     } catch (err) {
       console.error(err);
+      setSaveError(describeError(err));
     } finally {
       setSubmitting(false);
     }
@@ -302,6 +306,12 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
             className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400 resize-none"
           />
         </div>
+      )}
+
+      {saveError && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-xs text-red-600">
+          저장하지 못했어요 — {saveError}
+        </p>
       )}
 
       <button
