@@ -85,7 +85,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         rating: isDone ? (form.rating || null) : null,
         review: isDone ? (form.review || null) : null,
         poster_url: searchMeta.poster_url,
-        ...(showVenue && !isWant ? { venue: form.venue || null } : {}),
+        ...(showVenue && !isWant ? { cinema: form.venue || null } : {}),
         ...finalExtra,
       });
       router.push("/");

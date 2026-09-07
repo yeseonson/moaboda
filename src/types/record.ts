@@ -71,7 +71,7 @@ export interface CulturalRecord {
   seat: string | null;
   show_number: number | null;
   cast: string[] | null;       // 그날 실제로 본 배우 (공연 전체 출연진은 performances.cast)
-  venue: string | null;        // 영화관 (영화)
+  cinema: string | null;       // 영화관. 공연 극장은 performances.venue 에 있다
   read_count: number | null;   // 책 회독수
   is_public: boolean;
   created_at: string;
@@ -98,6 +98,12 @@ export function withDerivedStatus(r: CulturalRecord): CulturalRecord {
   const at = new Date(`${r.view_start}T${r.show_time ?? "00:00"}`);
   const status: StatusType = at.getTime() > Date.now() ? "planned" : "done";
   return status === r.status ? r : { ...r, status };
+}
+
+/** 관람 장소. 공연 극장은 프로덕션에 고정이라 카탈로그에,
+ *  영화관은 관람마다 달라져서 기록에 둔다. */
+export function recordVenue(r: CulturalRecord): string | null {
+  return r.category === "performance" ? r.performances?.venue ?? null : r.cinema;
 }
 
 /** 표시·집계용 출연진: 그날 본 배우가 기록돼 있으면 그걸, 없으면 공연 전체 출연진 */

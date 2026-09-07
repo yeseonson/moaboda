@@ -14,6 +14,7 @@ import {
   SUB_CATEGORY_LABEL,
   recordCast,
   recordDate,
+  recordVenue,
 } from "@/types/record";
 
 const STATUS_OPTS: { value: StatusType; label: string }[] = [
@@ -235,10 +236,17 @@ export default function RecordDetailPage() {
           </section>
         )}
 
-        {record.category === "movie" && mov && (mov.genres?.length || mov.cast?.length) && (
+        {record.category === "movie" &&
+          (recordVenue(record) || mov?.genres?.length || mov?.cast?.length) && (
           <section className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
             <h2 className="text-sm font-semibold text-zinc-700">영화 정보</h2>
-            {mov.genres && mov.genres.length > 0 && (
+            {recordVenue(record) && (
+              <div>
+                <p className="text-xs text-zinc-400">영화관</p>
+                <p className="text-sm">{recordVenue(record)}</p>
+              </div>
+            )}
+            {mov?.genres && mov.genres.length > 0 && (
               <div>
                 <p className="text-xs text-zinc-400">장르</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">
@@ -248,7 +256,7 @@ export default function RecordDetailPage() {
                 </div>
               </div>
             )}
-            {mov.cast && mov.cast.length > 0 && (
+            {mov?.cast && mov.cast.length > 0 && (
               <div>
                 <p className="text-xs text-zinc-400">출연진</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">

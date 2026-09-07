@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, STATUS_COLOR, STATUS_LABEL, SUB_CATEGORY_LABEL, recordDate } from "@/types/record";
+import { CategoryType, CulturalRecord, STATUS_COLOR, STATUS_LABEL, SUB_CATEGORY_LABEL, recordDate, recordVenue } from "@/types/record";
 import PageHeader from "@/components/layout/PageHeader";
 import RatingDots from "@/components/record/RatingDots";
 
@@ -216,7 +216,7 @@ export default function CalendarPage() {
                         <span className="truncate">
                           {[
                             r.sub_category ? SUB_CATEGORY_LABEL[r.sub_category] : CATEGORY_LABEL[r.category],
-                            r.category === "performance" ? r.performances?.venue : r.venue,
+                            recordVenue(r),
                           ]
                             .filter(Boolean)
                             .join(" · ")}

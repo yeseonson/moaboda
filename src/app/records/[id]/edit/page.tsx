@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, StatusType, recordCast } from "@/types/record";
+import { CategoryType, CulturalRecord, StatusType, recordCast, recordVenue } from "@/types/record";
 import StarRating from "@/components/record/StarRating";
 import TagInput from "@/components/record/TagInput";
 
@@ -50,7 +50,7 @@ export default function EditRecordPage() {
         view_end: record.view_end ?? "",
         rating: record.rating ?? 0,
         review: record.review ?? "",
-        venue: record.category === "performance" ? (perf?.venue ?? "") : (record.venue ?? ""),
+        venue: recordVenue(record) ?? "",
         cast: recordCast(record),
         seat: record.seat ?? "",
         show_time: record.show_time ?? "",
@@ -107,7 +107,7 @@ export default function EditRecordPage() {
             duration: form.duration || null,
           },
         } : isMovie ? {
-          venue: form.venue || null,
+          cinema: form.venue || null,
           movie: {
             ...(genreInput.trim() ? { genres: genreInput.split(",").map(g => g.trim()).filter(Boolean) } : {}),
           },
