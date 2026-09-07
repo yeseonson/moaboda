@@ -167,10 +167,10 @@ interface WorkGroup {
   category: CategoryType;
   sub_category: CulturalRecord["sub_category"];
   records: CulturalRecord[];  // 하위 탭으로 걸러진 것
-  total: number;              // 상태 무관 전체 관람 수
+  doneCount: number;          // 실제로 본 횟수 (예정은 빼고 센다)
   plannedCount: number;
   upcoming: string | null;    // 가장 가까운 예정 (정렬용)
-  latest: string;
+  headDate: string;           // 뱃지 옆 날짜. 정렬 기준에 맞춘 대표 날짜
 }
 
 function GroupRow({
@@ -212,15 +212,17 @@ function GroupRow({
             <p className="truncate text-sm font-medium">{group.title}</p>
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-medium text-white">
-              {group.total}회
-            </span>
+            {group.doneCount > 0 && (
+              <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-medium text-white">
+                {group.doneCount}회
+              </span>
+            )}
             {group.plannedCount > 0 && (
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR.planned}`}>
                 예정 {group.plannedCount}
               </span>
             )}
-            <span className="text-xs text-ink-subtle">{group.latest}</span>
+            <span className="text-xs text-ink-subtle">{group.headDate}</span>
           </div>
         </div>
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-medium leading-none text-ink-muted">
@@ -252,7 +254,8 @@ export default function RecentRecords() {
     }
   });
 
-  const [subTab, setSubTab] = useState<StatusType | "all">("all");
+  // null = 아직 직접 고르지 않음. 이 경우 첫 상태 탭(관람 예정)이 선택된다.
+  const [subTab, setSubTab] = useState<StatusType | "all" | null>(null);
   const [year, setYear] = useState<string>(() => String(new Date().getFullYear()));
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -341,13 +344,13 @@ export default function RecentRecords() {
       count: yearRecords.filter((r) => r.status === key).length,
     }));
     if (present.length < 2) return present;
-    return [{ key: "all" as const, label: "전체", count: yearRecords.length }, ...present];
+    // "전체" 는 맨 뒤. 기본 탭은 STATUS_SECTIONS 순서상 맨 앞인 "관람 예정" 이 된다.
+    return [...present, { key: "all" as const, label: "전체", count: yearRecords.length }];
   }, [yearRecords]);
 
   // 탭/연도를 옮기면 이전 하위 탭이 없을 수 있으니 렌더 시점에 보정한다.
-  const activeSubTab = subTabs.some((s) => s.key === subTab)
-    ? subTab
-    : subTabs[0]?.key ?? "all";
+  const activeSubTab =
+    subTab && subTabs.some((s) => s.key === subTab) ? subTab : subTabs[0]?.key ?? "all";
 
   const groups = useMemo(() => {
     const byWork = new Map<string, CulturalRecord[]>();
@@ -363,7 +366,12 @@ export default function RecentRecords() {
         activeSubTab === "all" ? [...all] : all.filter((r) => r.status === activeSubTab);
       if (shown.length === 0) continue;
 
-      shown.sort((a, b) => (recordDate(b) ?? "").localeCompare(recordDate(a) ?? ""));
+      const at = (r: CulturalRecord) => (r.view_start ?? "") + (r.show_time ?? "");
+      if (activeSubTab === "planned") {
+        shown.sort((a, b) => at(a).localeCompare(at(b)));   // 가까운 일정부터
+      } else {
+        shown.sort((a, b) => (recordDate(b) ?? "").localeCompare(recordDate(a) ?? ""));
+      }
       const planned = all.filter((r) => r.status === "planned");
       const head = shown[0];
 
@@ -374,13 +382,13 @@ export default function RecentRecords() {
         category: head.category,
         sub_category: head.sub_category,
         records: shown,
-        total: all.length,
+        doneCount: all.filter((r) => r.status === "done").length,
         plannedCount: planned.length,
         upcoming:
           planned
             .map((r) => (r.view_start ?? "") + (r.show_time ?? ""))
             .sort()[0] ?? null,
-        latest: recordDate(head) ?? "",
+        headDate: recordDate(head) ?? "",
       });
     }
 
@@ -391,7 +399,7 @@ export default function RecentRecords() {
         if (a.upcoming && b.upcoming) return a.upcoming.localeCompare(b.upcoming);
         return a.upcoming ? -1 : 1;
       }
-      return b.latest.localeCompare(a.latest);
+      return b.headDate.localeCompare(a.headDate);
     });
     return out;
   }, [yearRecords, activeSubTab]);
