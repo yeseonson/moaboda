@@ -178,6 +178,10 @@ export default function ProfilePage() {
                         <p className="mb-3 text-xs font-medium text-ink-muted">월별 기록</p>
                         <MonthlyBar records={records} />
                       </div>
+                      <div>
+                        <p className="mb-3 text-xs font-medium text-ink-muted">별점 분포</p>
+                        <RatingDist records={records.filter((r) => r.status === "done")} />
+                      </div>
                     </div>
                   ))}
 
@@ -205,6 +209,10 @@ export default function ProfilePage() {
                           <GenreBar items={perfSubCats} />
                         </div>
                       )}
+                      <div>
+                        <p className="mb-3 text-xs font-medium text-ink-muted">별점 분포</p>
+                        <RatingDist records={donePerfRecords} />
+                      </div>
                       {perfByRun.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">

@@ -186,8 +186,9 @@ export function RatingDist({ records }: { records: CulturalRecord[] }) {
 
   const dist = [1, 2, 3, 4, 5].map((star) => ({
     star,
-    // 3.5 처럼 반 단계는 위쪽 정수로 묶는다
-    count: rated.filter((r) => Math.ceil(r.rating ?? 0) === star).length,
+    // 별점 입력은 정수만 받는다. 임포트로 들어온 반 단계가 남아 있으면
+    // 내림으로 묶어 데이터 정리(2.5 -> 2)와 같은 기준을 쓴다.
+    count: rated.filter((r) => Math.floor(r.rating ?? 0) === star).length,
   }));
   const max = Math.max(...dist.map((d) => d.count), 1);
   // 큰 순서대로 진한 색 (크기 순서 = 색 순서)
