@@ -17,10 +17,15 @@
   --color-ink-muted: #8a948e;
   --color-ink-subtle: #9aa79f;
 
-  /* 카테고리 구분색 — 그린/황동과 어울리도록 채도를 낮춘 3색 */
-  --color-cat-performance: #7d6b94;
-  --color-cat-movie: #5f7d8c;
-  --color-cat-book: #a97c5b;
+  /* 카테고리 구분색 — assets/tokens.css 기준 */
+  --color-cat-performance: #27473c;
+  --color-cat-movie: #c08a2e;
+  --color-cat-book: #a8543b;
+  --color-sunday: #a8544b;
+
+  /* 차트 트랙(빈 막대). 순위형 램프 5단계는 shadcn 의 --color-chart-* 와
+     이름이 겹쳐서 여기 두지 않고 profile/page.tsx 의 CHART_RAMP 로 관리한다. */
+  --color-chart-track: #f2f5f3;
 
   --color-line: rgba(28, 26, 23, 0.08);
   --color-line-strong: rgba(28, 26, 23, 0.14);

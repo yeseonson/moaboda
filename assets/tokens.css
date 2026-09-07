@@ -11,6 +11,14 @@
   --moa-cat-book: #A8543B;     /* 책 */
   --moa-sunday: #A8544B;
 
+  /* chart ramp — 순위형 차트 (1위 → 하위) */
+  --moa-chart-1: #27473C;
+  --moa-chart-2: #3D6455;
+  --moa-chart-3: #5A806F;
+  --moa-chart-4: #8AA79A;
+  --moa-chart-5: #C3D2CB;
+  --moa-chart-track: #F2F5F3;
+
   /* surfaces */
   --moa-bg: #FBFAF7;           /* 페이지 배경(종이) */
   --moa-surface: #FFFFFF;      /* 카드 */

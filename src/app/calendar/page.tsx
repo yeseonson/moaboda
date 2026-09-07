@@ -31,6 +31,10 @@ const CATEGORY_LABEL: Record<CategoryType, string> = {
   book: "책",
 };
 
+/** 관람 예정 표시 — 채움 대신 사선 (assets/README.md) */
+const PLANNED_HATCH =
+  "repeating-linear-gradient(135deg,#C3D2CB 0 3px,#E2E9E5 3px 6px)";
+
 const MONTH_ABBR = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 /** "2026-09-02" -> SEP / 02 배지 */
@@ -110,8 +114,13 @@ export default function CalendarPage() {
           </div>
 
           <div className="grid grid-cols-7 mb-2">
-            {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-              <div key={d} className="text-center text-xs font-medium text-ink-subtle py-1">{d}</div>
+            {["일", "월", "화", "수", "목", "금", "토"].map((d, i) => (
+              <div
+                key={d}
+                className={`text-center text-xs font-medium py-1 ${i === 0 ? "text-sunday" : "text-ink-subtle"}`}
+              >
+                {d}
+              </div>
             ))}
           </div>
 
@@ -122,6 +131,7 @@ export default function CalendarPage() {
               const dayRecords = recordsByDate[dateStr] ?? [];
               const isToday = dateStr === today.toISOString().split("T")[0];
               const isSelected = dateStr === selectedDate;
+              const isSunday = (firstDay + day - 1) % 7 === 0;
 
               return (
                 <button
@@ -131,12 +141,27 @@ export default function CalendarPage() {
                     isSelected ? "bg-brand" : isToday ? "bg-brand-soft" : "hover:bg-brand-soft/60"
                   }`}
                 >
-                  <span className={`text-sm ${isSelected ? "font-bold text-white" : isToday ? "font-bold" : ""}`}>
+                  <span
+                    className={`text-sm ${
+                      isSelected
+                        ? "font-bold text-white"
+                        : isSunday
+                          ? `text-sunday ${isToday ? "font-bold" : ""}`
+                          : isToday
+                            ? "font-bold"
+                            : ""
+                    }`}
+                  >
                     {day}
                   </span>
                   <div className="flex gap-0.5 mt-0.5 h-2 items-center">
                     {dayRecords.slice(0, 3).map((r, i) => (
-                      <div key={i} className={`h-1.5 w-1.5 rounded-full ${DOT_COLOR[r.category]}`} />
+                      // 관람 예정은 채움 대신 사선 패턴
+                      <div
+                        key={i}
+                        className={`h-1.5 w-1.5 rounded-full ${r.status === "planned" ? "" : DOT_COLOR[r.category]}`}
+                        style={r.status === "planned" ? { background: PLANNED_HATCH } : undefined}
+                      />
                     ))}
                   </div>
                 </button>
