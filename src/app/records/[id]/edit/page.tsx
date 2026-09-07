@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { CategoryType, CulturalRecord, StatusType, recordCast, recordVenue } from "@/types/record";
+import { CategoryType, CulturalRecord, OTT_PLATFORMS, StatusType, recordCast } from "@/types/record";
 import StarRating from "@/components/record/StarRating";
 import TagInput from "@/components/record/TagInput";
 
@@ -21,6 +21,8 @@ export default function EditRecordPage() {
   const [category, setCategory] = useState<CategoryType>("performance");
   const [status, setStatus] = useState<StatusType>("done");
   const [genreInput, setGenreInput] = useState("");
+  const [watchMode, setWatchMode] = useState<"cinema" | "ott">("cinema");
+  const [ottPick, setOttPick] = useState<string>("");
   const [form, setForm] = useState({
     title: "",
     view_start: "",
@@ -38,6 +40,10 @@ export default function EditRecordPage() {
     api.records.get(id).then((record: CulturalRecord) => {
       const perf = record.performances;
       setCategory(record.category);
+      if (record.ott) {
+        setWatchMode("ott");
+        setOttPick(OTT_PLATFORMS.includes(record.ott as never) ? record.ott : "기타");
+      }
       setStatus(record.status ?? "done");
       setGenreInput(
         record.category === "movie" ? (record.movies?.genres?.join(", ") ?? "")
@@ -50,7 +56,10 @@ export default function EditRecordPage() {
         view_end: record.view_end ?? "",
         rating: record.rating ?? 0,
         review: record.review ?? "",
-        venue: recordVenue(record) ?? "",
+        venue:
+          record.category === "performance"
+            ? perf?.venue ?? ""
+            : record.ott ?? record.cinema ?? "",
         cast: recordCast(record),
         seat: record.seat ?? "",
         show_time: record.show_time ?? "",
@@ -107,7 +116,9 @@ export default function EditRecordPage() {
             duration: form.duration || null,
           },
         } : isMovie ? {
-          cinema: form.venue || null,
+          ...(watchMode === "ott"
+            ? { ott: (ottPick === "기타" ? form.venue.trim() : ottPick) || null, cinema: null }
+            : { cinema: form.venue.trim() || null, ott: null }),
           movie: {
             ...(genreInput.trim() ? { genres: genreInput.split(",").map(g => g.trim()).filter(Boolean) } : {}),
           },
@@ -189,12 +200,62 @@ export default function EditRecordPage() {
           </div>
         )}
 
-        {(isPerformance || (isMovie && !isWant)) && (
+        {isPerformance && (
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-500">{isPerformance ? "극장" : "영화관"}</label>
+            <label className="text-xs font-medium text-zinc-500">극장</label>
             <input value={form.venue} onChange={(e) => set("venue", e.target.value)}
-              placeholder={isPerformance ? "예) 블루스퀘어 신한카드홀" : "예) CGV 강남"}
+              placeholder="예) 블루스퀘어 신한카드홀"
               className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
+        )}
+
+        {isMovie && !isWant && (
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-zinc-500">관람 방식</label>
+            <div className="flex gap-1 rounded-xl border border-zinc-200 p-1">
+              {(["cinema", "ott"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setWatchMode(m)}
+                  className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
+                    watchMode === m ? "bg-brand text-white" : "text-zinc-500 hover:text-zinc-700"
+                  }`}
+                >
+                  {m === "cinema" ? "영화관" : "OTT"}
+                </button>
+              ))}
+            </div>
+
+            {watchMode === "cinema" ? (
+              <input value={form.venue} onChange={(e) => set("venue", e.target.value)}
+                placeholder="예) CGV 강남"
+                className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+            ) : (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {[...OTT_PLATFORMS, "기타"].map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setOttPick(name)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                        ottPick === name
+                          ? "border-brand bg-brand text-white"
+                          : "border-zinc-200 text-zinc-500 hover:border-zinc-400"
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+                {ottPick === "기타" && (
+                  <input value={form.venue} onChange={(e) => set("venue", e.target.value)}
+                    placeholder="플랫폼 이름"
+                    className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+                )}
+              </div>
+            )}
           </div>
         )}
 

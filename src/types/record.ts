@@ -72,6 +72,7 @@ export interface CulturalRecord {
   show_number: number | null;
   cast: string[] | null;       // 그날 실제로 본 배우 (공연 전체 출연진은 performances.cast)
   cinema: string | null;       // 영화관. 공연 극장은 performances.venue 에 있다
+  ott: string | null;          // OTT 플랫폼. cinema 와 둘 중 하나만 채운다
   read_count: number | null;   // 책 회독수
   is_public: boolean;
   created_at: string;
@@ -100,10 +101,28 @@ export function withDerivedStatus(r: CulturalRecord): CulturalRecord {
   return status === r.status ? r : { ...r, status };
 }
 
-/** 관람 장소. 공연 극장은 프로덕션에 고정이라 카탈로그에,
- *  영화관은 관람마다 달라져서 기록에 둔다. */
+export const OTT_PLATFORMS = ["넷플릭스", "왓챠", "디즈니플러스", "티빙"] as const;
+
+/**
+ * 어디서 봤는지. 공연 극장은 프로덕션에 고정이라 카탈로그에,
+ * 영화관·OTT 는 관람마다 달라져서 기록에 둔다.
+ * 영화는 cinema 와 ott 중 하나만 채워지므로 어느 쪽이 찼는지가 곧 관람 방식이다.
+ */
+export function watchPlace(
+  r: CulturalRecord
+): { label: string; value: string } | null {
+  if (r.category === "performance") {
+    const venue = r.performances?.venue;
+    return venue ? { label: "극장", value: venue } : null;
+  }
+  if (r.ott) return { label: "OTT", value: r.ott };
+  if (r.cinema) return { label: "영화관", value: r.cinema };
+  return null;
+}
+
+/** 표시용 장소 문자열만 필요할 때 */
 export function recordVenue(r: CulturalRecord): string | null {
-  return r.category === "performance" ? r.performances?.venue ?? null : r.cinema;
+  return watchPlace(r)?.value ?? null;
 }
 
 /** 표시·집계용 출연진: 그날 본 배우가 기록돼 있으면 그걸, 없으면 공연 전체 출연진 */

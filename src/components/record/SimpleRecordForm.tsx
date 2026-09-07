@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { CategoryType, StatusType } from "@/types/record";
+import { CategoryType, OTT_PLATFORMS, StatusType } from "@/types/record";
 import StarRating from "./StarRating";
 
 interface SearchMeta {
@@ -35,6 +35,8 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
   const [submitting, setSubmitting] = useState(false);
   const [genreInput, setGenreInput] = useState(searchMeta.tags?.join(", ") ?? "");
   const [status, setStatus] = useState<StatusType>("done");
+  const [watchMode, setWatchMode] = useState<"cinema" | "ott">("cinema");
+  const [ottPick, setOttPick] = useState<string>("");
   const [form, setForm] = useState({
     title: searchMeta.title,
     view_start: today,
@@ -76,6 +78,12 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         return base;
       })();
 
+      // 영화관과 OTT 는 둘 중 하나만 채운다. 어느 쪽이 찼는지가 곧 관람 방식.
+      const watchFields =
+        watchMode === "ott"
+          ? { ott: (ottPick === "기타" ? form.venue.trim() : ottPick) || null, cinema: null }
+          : { cinema: form.venue.trim() || null, ott: null };
+
       await api.records.create({
         category,
         title: form.title,
@@ -85,7 +93,7 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         rating: isDone ? (form.rating || null) : null,
         review: isDone ? (form.review || null) : null,
         poster_url: searchMeta.poster_url,
-        ...(showVenue && !isWant ? { cinema: form.venue || null } : {}),
+        ...(showVenue && !isWant ? watchFields : {}),
         ...finalExtra,
       });
       router.push("/");
@@ -173,11 +181,58 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
       )}
 
       {showVenue && (
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-500">영화관</label>
-          <input value={form.venue} onChange={(e) => set("venue", e.target.value)}
-            placeholder="예) CGV 강남, 롯데시네마 건대입구"
-            className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-zinc-500">관람 방식</label>
+          <div className="flex gap-1 rounded-xl border border-zinc-200 p-1">
+            {(["cinema", "ott"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setWatchMode(m)}
+                className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
+                  watchMode === m ? "bg-brand text-white" : "text-zinc-500 hover:text-zinc-700"
+                }`}
+              >
+                {m === "cinema" ? "영화관" : "OTT"}
+              </button>
+            ))}
+          </div>
+
+          {watchMode === "cinema" ? (
+            <input
+              value={form.venue}
+              onChange={(e) => set("venue", e.target.value)}
+              placeholder="예) CGV 강남, 롯데시네마 건대입구"
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400"
+            />
+          ) : (
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {[...OTT_PLATFORMS, "기타"].map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => setOttPick(name)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                      ottPick === name
+                        ? "border-brand bg-brand text-white"
+                        : "border-zinc-200 text-zinc-500 hover:border-zinc-400"
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+              {ottPick === "기타" && (
+                <input
+                  value={form.venue}
+                  onChange={(e) => set("venue", e.target.value)}
+                  placeholder="플랫폼 이름"
+                  className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400"
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 
