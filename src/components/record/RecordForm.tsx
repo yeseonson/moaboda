@@ -83,7 +83,7 @@ export default function RecordForm({ subCategory, onSubCategoryChange, searchRes
     extraCast: [] as string[],
     seat: "",
     show_time: "",
-    duration: searchResult?.runtime ? String(parseInt(searchResult.runtime)) : "",
+    duration: searchResult?.runtime ?? "", // 분 단위 숫자 문자열 (KOPIS 라우트에서 변환됨)
   });
 
   const set = (key: string, value: string | number | string[]) =>

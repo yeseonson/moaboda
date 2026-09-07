@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchKopis, splitCast, tag } from "@/lib/kopis";
+import { fetchKopis, runtimeMinutes, splitCast, tag } from "@/lib/kopis";
 
 export async function GET(
   _req: NextRequest,
@@ -24,6 +24,6 @@ export async function GET(
     period_end: tag(xml, "prfpdto"),
     genre: tag(xml, "genrenm"),
     cast: splitCast(tag(xml, "prfcast")),
-    runtime: tag(xml, "prfruntime"),
+    runtime: runtimeMinutes(tag(xml, "prfruntime")),
   });
 }

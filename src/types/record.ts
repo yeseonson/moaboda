@@ -87,6 +87,19 @@ export function recordDate(r: CulturalRecord): string | null {
   return r.view_end ?? r.view_start;
 }
 
+/**
+ * 공연은 관람 일시가 지나면 자동으로 "봤어요"가 된다.
+ * DB 의 status 는 등록 시점 기준이라 그대로 두면 지난 공연도 계속 "관람 예정"으로 남는다.
+ * 영화·책은 사용자가 직접 상태를 고르므로 건드리지 않는다.
+ */
+export function withDerivedStatus(r: CulturalRecord): CulturalRecord {
+  if (r.category !== "performance" || !r.view_start) return r;
+  if (r.status !== "planned" && r.status !== "done") return r;
+  const at = new Date(`${r.view_start}T${r.show_time ?? "00:00"}`);
+  const status: StatusType = at.getTime() > Date.now() ? "planned" : "done";
+  return status === r.status ? r : { ...r, status };
+}
+
 /** 표시·집계용 출연진: 그날 본 배우가 기록돼 있으면 그걸, 없으면 공연 전체 출연진 */
 export function recordCast(r: CulturalRecord): string[] {
   return r.cast ?? r.performances?.cast ?? [];

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { CulturalRecord } from "@/types/record";
+import { withDerivedStatus, type CulturalRecord, type PerformanceWork } from "@/types/record";
 
 /** records + 조인된 작품 정보 (CulturalRecord 와 동일한 모양) */
 const RECORD_SELECT = "*, movies(*), books(*), performances(*)";
@@ -139,7 +139,7 @@ export const api = {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as CulturalRecord[];
+      return ((data ?? []) as unknown as CulturalRecord[]).map(withDerivedStatus);
     },
 
     async get(id: string): Promise<CulturalRecord> {
@@ -150,7 +150,7 @@ export const api = {
         .eq("id", id)
         .single();
       if (error) throw error;
-      return data as unknown as CulturalRecord;
+      return withDerivedStatus(data as unknown as CulturalRecord);
     },
 
     async create(body: WritePayload): Promise<CulturalRecord> {
@@ -169,7 +169,7 @@ export const api = {
         .select(RECORD_SELECT)
         .single();
       if (error) throw error;
-      return data as unknown as CulturalRecord;
+      return withDerivedStatus(data as unknown as CulturalRecord);
     },
 
     async update(id: string, body: WritePayload): Promise<CulturalRecord> {
@@ -209,7 +209,7 @@ export const api = {
         .select(RECORD_SELECT)
         .single();
       if (error) throw error;
-      return data as unknown as CulturalRecord;
+      return withDerivedStatus(data as unknown as CulturalRecord);
     },
 
     async delete(id: string): Promise<null> {
@@ -217,6 +217,23 @@ export const api = {
       const { error } = await supabase.from("records").delete().eq("id", id);
       if (error) throw error;
       return null;
+    },
+  },
+
+  performances: {
+    /**
+     * 이미 기록한 적 있는 공연이면 카탈로그에 저장된 극장·러닝타임을 돌려준다.
+     * 한 번 고쳐둔 값이 다음 기록에도 그대로 쓰이도록 하기 위한 것.
+     */
+    async byKopisId(kopisId: string): Promise<PerformanceWork | null> {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("performances")
+        .select("*")
+        .eq("kopis_id", kopisId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as PerformanceWork | null) ?? null;
     },
   },
 

@@ -40,6 +40,16 @@ export function splitCast(value: string | null): string[] | null {
   return names.length > 0 ? names : null;
 }
 
+/** KOPIS 러닝타임 "2시간 30분" -> 150. 분 단위 숫자만 돌려준다. */
+export function runtimeMinutes(raw: string | null): string | null {
+  if (!raw) return null;
+  // 숫자만 뽑는다. 문자 클래스로 처리해 이스케이프를 쓰지 않는다.
+  const nums = raw.split(/[^0-9]+/).filter(Boolean).map(Number);
+  if (nums.length === 0) return null;
+  const total = raw.includes("시간") ? nums[0] * 60 + (nums[1] ?? 0) : nums[0];
+  return total > 0 ? String(total) : null;
+}
+
 function yyyymmdd(date: Date): string {
   return date.toISOString().slice(0, 10).replace(/-/g, "");
 }

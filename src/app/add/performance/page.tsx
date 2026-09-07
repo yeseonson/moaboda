@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SubCategoryType } from "@/types/record";
 import PerformanceSearch, { SearchResult } from "@/components/record/PerformanceSearch";
 import RecordForm from "@/components/record/RecordForm";
+import { api } from "@/lib/api";
 
 // KOPIS 장르 → 서브카테고리 자동 매핑
 function inferSubCategory(genre: string | null): SubCategoryType {
@@ -23,8 +24,25 @@ export default function AddPage() {
   const [subCategory, setSubCategory] = useState<SubCategoryType>("musical");
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
 
-  const handleSearchSelect = (result: SearchResult | null) => {
-    setSearchResult(result);
+  const handleSearchSelect = async (result: SearchResult | null) => {
+    // 전에 기록한 적 있는 공연이면 저장해둔 극장·러닝타임을 우선 쓴다.
+    // (KOPIS 값을 한 번 고쳐놨다면 그 값이 계속 따라오도록)
+    let merged = result;
+    if (result?.kopis_id) {
+      try {
+        const saved = await api.performances.byKopisId(result.kopis_id);
+        if (saved) {
+          merged = {
+            ...result,
+            venue: saved.venue ?? result.venue,
+            runtime: saved.duration ?? result.runtime,
+          };
+        }
+      } catch {
+        // 조회 실패해도 KOPIS 값으로 진행
+      }
+    }
+    setSearchResult(merged);
     setSubCategory(inferSubCategory(result?.genre ?? null));
     setStep("form");
   };
