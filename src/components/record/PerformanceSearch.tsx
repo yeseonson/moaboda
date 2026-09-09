@@ -110,15 +110,21 @@ export default function PerformanceSearch({ onSelect }: Props) {
       )}
 
       {query.length >= 2 && !loading && results.length === 0 && (
-        <div className="space-y-2 text-center">
-          <p className="text-sm text-zinc-400">검색 결과가 없어요.</p>
+        <p className="text-center text-sm text-zinc-400">검색 결과가 없어요.</p>
+      )}
+
+      {/* 결과가 있어도 찾는 공연이 없을 수 있다. 검색어를 넣은 동안은 계속 열어둔다 */}
+      {query.length >= 2 && !loading && (
+        <p className="text-center text-sm text-zinc-400">
+          찾는 공연이 없나요?{" "}
           <button
+            type="button"
             onClick={() => onSelect(null)}
-            className="text-sm font-medium text-zinc-600 underline underline-offset-2"
+            className="font-medium text-zinc-600 underline underline-offset-2"
           >
             직접 입력하기
           </button>
-        </div>
+        </p>
       )}
     </div>
   );
