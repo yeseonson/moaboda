@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { CategoryType, CulturalRecord, recordDate } from "@/types/record";
 import RatingDots from "@/components/record/RatingDots";
 
@@ -75,6 +75,9 @@ export function RatioBar({ records }: { records: CulturalRecord[] }) {
 }
 
 // ── 월별 기록 (12개월 한 화면) ────────────────────────────
+/** 막대를 쌓는 순서. flex-col + justify-end 라 배열 앞이 위로 간다 */
+const STACK_ORDER: CategoryType[] = ["book", "movie", "performance"];
+
 export function MonthlyBar({
   records,
   filterCat,
@@ -90,10 +93,15 @@ export function MonthlyBar({
     const inMonth = records.filter(
       (r) => recordDate(r)?.startsWith(key) && (!filterCat || r.category === filterCat)
     );
+    const done = inMonth.filter((r) => r.status === "done");
     return {
       month: i + 1,
-      done: inMonth.filter((r) => r.status === "done").length,
+      done: done.length,
       planned: inMonth.filter((r) => r.status === "planned").length,
+      // 전체 탭에서 카테고리별로 나눠 쌓는다
+      byCat: Object.fromEntries(
+        STACK_ORDER.map((c) => [c, done.filter((r) => r.category === c).length])
+      ) as Record<CategoryType, number>,
     };
   });
 
@@ -142,22 +150,31 @@ export function MonthlyBar({
         )}
 
         <div className="flex h-full items-end gap-1">
-          {months.map(({ month, done, planned }) => (
-            <div key={month} className="flex flex-1 flex-col justify-end gap-0.5">
-              {planned > 0 && (
-                <div
-                  className="w-full rounded-t-sm"
-                  style={{ height: (planned / max) * H, background: PLANNED_HATCH }}
-                />
-              )}
-              {done > 0 && (
-                <div
-                  className={planned > 0 ? "w-full" : "w-full rounded-t-sm"}
-                  style={{ height: (done / max) * H, backgroundColor: barColor }}
-                />
-              )}
-            </div>
-          ))}
+          {months.map((m) => {
+            // 위에서 아래 순서. 예정이 맨 위, 그 아래로 책 · 영화 · 공연.
+            const segments: { key: string; value: number; style: CSSProperties }[] = [
+              { key: "planned", value: m.planned, style: { background: PLANNED_HATCH } },
+              ...(filterCat
+                ? [{ key: filterCat, value: m.done, style: { backgroundColor: barColor } }]
+                : STACK_ORDER.map((c) => ({
+                    key: c,
+                    value: m.byCat[c],
+                    style: { backgroundColor: CAT_COLOR[c] },
+                  }))),
+            ].filter((s) => s.value > 0);
+
+            return (
+              <div key={m.month} className="flex flex-1 flex-col justify-end gap-0.5">
+                {segments.map((s, i) => (
+                  <div
+                    key={s.key}
+                    className={i === 0 ? "w-full rounded-t-sm" : "w-full"}
+                    style={{ ...s.style, height: (s.value / max) * H }}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -171,10 +188,20 @@ export function MonthlyBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: barColor }} />
-          {filterCat === "book" ? "완독" : "관람 완료"}
-        </span>
+        {filterCat ? (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: barColor }} />
+            {filterCat === "book" ? "완독" : "관람 완료"}
+          </span>
+        ) : (
+          // 전체 탭은 막대가 카테고리로 나뉘어 있다
+          [...STACK_ORDER].reverse().map((c) => (
+            <span key={c} className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: CAT_COLOR[c] }} />
+              {CAT_LABEL[c]}
+            </span>
+          ))
+        )}
         {/* 책에는 '관람 예정' 상태가 없다. 사선 막대가 없으면 범례도 뺀다 */}
         {months.some((m) => m.planned > 0) && (
           <span className="flex items-center gap-1.5">
