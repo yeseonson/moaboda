@@ -31,6 +31,9 @@ const STATUS_OPTS: { value: StatusType; label: string }[] = [
 /** 한 번에 그리는 목록 수. 영화가 850편이라 전부 그리면 포스터 요청이 그만큼 나간다 */
 const PAGE = 30;
 
+/** 연도 칩으로 노출하는 최근 연도 수. 그보다 오래된 건 "전체" 나 검색으로 찾는다 */
+const YEAR_CHIPS = 3;
+
 const TABS: { key: CategoryType; label: string; icon: string }[] = [
   { key: "performance", label: "공연", icon: "🎭" },
   { key: "movie", label: "영화", icon: "🎬" },
@@ -323,23 +326,22 @@ export default function RecentRecords() {
   );
 
   // 연도 -> 상태 순으로 거른다. 그래야 지난 연도에서 "관람 예정" 탭이 저절로 사라진다.
-  // 연도 칩. 관람일을 모르는 기록(왓챠 임포트분 등)은 "날짜 없음" 으로 따로 모은다.
-  // 그러지 않으면 어떤 연도에도 안 걸려 전체 보기에서만 나타난다.
-  const NO_DATE = "none";
+  // 칩은 최근 YEAR_CHIPS 개만. 관람일 없는 기록(왓챠 임포트분 417건)은 칩을 만들지 않는다.
+  // 둘 다 "전체" 와 검색으로 간다 — 오래된 기록은 연도보다 제목으로 찾는다.
   const years = useMemo(() => {
     const c: Record<string, number> = {};
     for (const r of categoryRecords) {
       const d = recordDate(r);
-      c[d ? d.slice(0, 4) : NO_DATE] = (c[d ? d.slice(0, 4) : NO_DATE] ?? 0) + 1;
+      if (!d) continue;
+      const y = d.slice(0, 4);
+      c[y] = (c[y] ?? 0) + 1;
     }
-    return Object.entries(c).sort(([a], [b]) => {
-      if (a === NO_DATE) return 1; // 날짜 없음은 맨 뒤
-      if (b === NO_DATE) return -1;
-      return b.localeCompare(a);
-    });
+    return Object.entries(c)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, YEAR_CHIPS);
   }, [categoryRecords]);
 
-  // 올해가 없으면 가장 최근 연도로 떨어진다.
+  // 올해가 칩에 없으면 가장 최근 연도로 떨어진다.
   const activeYear =
     year === "all" || years.some(([y]) => y === year) ? year : years[0]?.[0] ?? "all";
 
@@ -352,7 +354,6 @@ export default function RecentRecords() {
       return categoryRecords.filter((r) => r.title.toLowerCase().includes(q));
     }
     if (activeYear === "all") return categoryRecords;
-    if (activeYear === NO_DATE) return categoryRecords.filter((r) => !recordDate(r));
     return categoryRecords.filter((r) => (recordDate(r) ?? "").startsWith(activeYear));
   }, [categoryRecords, activeYear, searching, query]);
 
@@ -504,7 +505,7 @@ export default function RecentRecords() {
           </div>
 
           {/* 검색 중에는 전체에서 찾으므로 연도 칩을 감춘다 */}
-          {!searching && years.length > 1 && (
+          {!searching && years.length > 0 && (
             <div className="flex gap-1 overflow-x-auto pb-0.5">
               {years.map(([y, count]) => (
                 <button
@@ -516,7 +517,7 @@ export default function RecentRecords() {
                       : "text-ink-subtle hover:text-ink"
                   }`}
                 >
-                  {y === NO_DATE ? "날짜 없음" : y}
+                  {y}
                   <span className="ml-1 text-[10px] opacity-60">{count}</span>
                 </button>
               ))}
