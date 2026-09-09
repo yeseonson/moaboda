@@ -10,12 +10,17 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   // 인사 카드의 카테고리별 집계. RLS 로 본인 기록만 조회된다.
-  const { data: rows } = await supabase.from("records").select("category");
-  const counts = SUMMARY_ORDER.map((category) => ({
-    category,
-    label: CATEGORY_LABEL[category],
-    count: (rows ?? []).filter((r) => r.category === category).length,
-  }));
+  // 행을 받아서 세면 PostgREST 의 1000행 제한에 걸려 뒤쪽 카테고리가 통째로 빠진다.
+  // head + count 로 서버에서 센다.
+  const counts = await Promise.all(
+    SUMMARY_ORDER.map(async (category) => {
+      const { count } = await supabase
+        .from("records")
+        .select("*", { count: "exact", head: true })
+        .eq("category", category);
+      return { category, label: CATEGORY_LABEL[category], count: count ?? 0 };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-canvas pb-20">

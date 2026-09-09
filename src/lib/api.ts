@@ -4,6 +4,9 @@ import { withDerivedStatus, type CulturalRecord, type PerformanceWork } from "@/
 /** records + 조인된 작품 정보 (CulturalRecord 와 동일한 모양) */
 const RECORD_SELECT = "*, movies(*), books(*), performances(*)";
 
+/** PostgREST 의 기본 max-rows. 이보다 많이 요청해도 여기서 잘려서 온다 */
+const PAGE_SIZE = 1000;
+
 type WorkKind = "movie" | "book" | "performance";
 
 /** 작품(works) 테이블 메타: records 의 FK 컬럼과 중복 판별용 자연키 */
@@ -118,18 +121,28 @@ export const api = {
       const supabase = createClient();
       const userId = await requireUserId(supabase);
 
-      let query = supabase
-        .from("records")
-        .select(RECORD_SELECT)
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+      // PostgREST 는 한 번에 PAGE_SIZE 행까지만 준다. 넘으면 조용히 잘려서
+      // 오래된 기록이 목록·통계·캘린더에서 통째로 사라진다. 다 받을 때까지 이어 받는다.
+      const build = () => {
+        let query = supabase
+          .from("records")
+          .select(RECORD_SELECT)
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+        if (params?.category) query = query.eq("category", params.category);
+        if (params?.sub_category) query = query.eq("sub_category", params.sub_category);
+        return query;
+      };
 
-      if (params?.category) query = query.eq("category", params.category);
-      if (params?.sub_category) query = query.eq("sub_category", params.sub_category);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return ((data ?? []) as unknown as CulturalRecord[]).map(withDerivedStatus);
+      const all: CulturalRecord[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await build().range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const page = (data ?? []) as unknown as CulturalRecord[];
+        all.push(...page);
+        if (page.length < PAGE_SIZE) break;
+      }
+      return all.map(withDerivedStatus);
     },
 
     async get(id: string): Promise<CulturalRecord> {
