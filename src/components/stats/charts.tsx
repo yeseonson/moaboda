@@ -184,11 +184,11 @@ export function RatingDist({ records }: { records: CulturalRecord[] }) {
   const rated = records.filter((r) => r.rating);
   if (!rated.length) return <p className="text-sm text-ink-subtle">평점 기록이 없어요</p>;
 
-  const dist = [1, 2, 3, 4, 5].map((star) => ({
+  // 반 단계까지 그대로 보여준다. 정수로 묶으면 3.5 가 3 에 흡수돼
+  // 분포가 뭉개진다 (왓챠 임포트분은 절반이 반 단계).
+  const dist = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((star) => ({
     star,
-    // 별점 입력은 정수만 받는다. 임포트로 들어온 반 단계가 남아 있으면
-    // 내림으로 묶어 데이터 정리(2.5 -> 2)와 같은 기준을 쓴다.
-    count: rated.filter((r) => Math.floor(r.rating ?? 0) === star).length,
+    count: rated.filter((r) => r.rating === star).length,
   }));
   const max = Math.max(...dist.map((d) => d.count), 1);
   // 큰 순서대로 진한 색 (크기 순서 = 색 순서)
@@ -197,18 +197,21 @@ export function RatingDist({ records }: { records: CulturalRecord[] }) {
   );
 
   return (
-    <div className="flex items-end gap-2" style={{ height: 132 }}>
+    <div className="flex items-end gap-1" style={{ height: 132 }}>
       {dist.map(({ star, count }) => (
         <div key={star} className="flex flex-1 flex-col items-center justify-end gap-1">
           <span className="text-[10px] font-medium text-ink-muted">{count || ""}</span>
           <div
-            className="w-full rounded-t-md"
+            className="w-full rounded-t-sm"
             style={{
               height: Math.max((count / max) * 96, count > 0 ? 4 : 0),
               backgroundColor: rampColor(rankOf.get(star) ?? 4),
             }}
           />
-          <span className="text-[11px] text-ink-subtle">{star}</span>
+          {/* 정수 눈금만 라벨을 단다. 9칸에 전부 적으면 읽기 어렵다 */}
+          <span className="h-3 text-[11px] text-ink-subtle">
+            {Number.isInteger(star) ? star : ""}
+          </span>
         </div>
       ))}
     </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import RatingDots from "@/components/record/RatingDots";
+import StarRating from "@/components/record/StarRating";
 import {
   CulturalRecord,
   STATUS_COLOR,
@@ -33,6 +33,7 @@ export default function RecordDetailPage() {
   const [editingReview, setEditingReview] = useState(false);
   const [reviewDraft, setReviewDraft] = useState("");
   const [reviewSaving, setReviewSaving] = useState(false);
+  const [ratingSaving, setRatingSaving] = useState(false);
 
   useEffect(() => {
     api.records
@@ -108,6 +109,21 @@ export default function RecordDetailPage() {
     }
   };
 
+  const saveRating = async (next: number) => {
+    if (!record || ratingSaving) return;
+    const prevRating = record.rating;
+    // 낙관적 반영 후 실패하면 되돌린다
+    setRecord((prev) => (prev ? { ...prev, rating: next } : prev));
+    setRatingSaving(true);
+    try {
+      await api.records.update(record.id, { rating: next });
+    } catch {
+      setRecord((prev) => (prev ? { ...prev, rating: prevRating } : prev));
+    } finally {
+      setRatingSaving(false);
+    }
+  };
+
   if (!record) return null;
 
   const perf = record.performances;
@@ -167,7 +183,12 @@ export default function RecordDetailPage() {
               <span className="ml-2 text-xs text-zinc-400">{record.read_count}번째 읽기</span>
             )}
           </p>
-          {rating > 0 && <RatingDots value={rating} size={11} className="mt-3" />}
+          {/* 다 본 기록에만. 별을 누르면 바로 저장된다 (감상평과 같은 방식) */}
+          {record.status === "done" && (
+            <div className={`mt-3 transition-opacity ${ratingSaving ? "opacity-50" : ""}`}>
+              <StarRating value={rating} onChange={saveRating} />
+            </div>
+          )}
 
           {isMovieOrBook && (
             <div className={`mt-4 flex gap-1 rounded-xl border border-zinc-200 p-1 transition-opacity ${statusSaving ? "opacity-50" : ""}`}>
