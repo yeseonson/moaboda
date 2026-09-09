@@ -114,7 +114,8 @@ export function MonthlyBar({
     ? doneMonths.reduce((s, m) => s + m.done, 0) / doneMonths.length
     : 0;
 
-  const H = 112; // 그래프 높이(px)
+  const H = 112;      // 막대 영역 높이(px)
+  const LABEL = 16;   // 막대 위 건수 라벨 자리
   const barColor = filterCat ? CAT_COLOR[filterCat] : CAT_COLOR.performance;
 
   return (
@@ -138,7 +139,7 @@ export function MonthlyBar({
         </button>
       </div>
 
-      <div className="relative" style={{ height: H }}>
+      <div className="relative" style={{ height: H + LABEL }}>
         {/* 평균선 */}
         {avg > 0 && (
           <div
@@ -168,6 +169,9 @@ export function MonthlyBar({
 
             return (
               <div key={m.month} className="flex flex-1 flex-col justify-end">
+                <p className="text-center text-[10px] font-medium leading-4 text-ink-muted">
+                  {total(m) || ""}
+                </p>
                 {segments.map((s, i) => (
                   <div
                     key={s.key}
@@ -183,10 +187,9 @@ export function MonthlyBar({
 
       <div className="flex gap-1">
         {months.map((m) => (
-          <div key={m.month} className="flex-1 text-center">
-            <p className="text-[10px] font-medium text-ink-muted">{total(m) || ""}</p>
-            <p className="text-[10px] text-ink-subtle">{m.month}</p>
-          </div>
+          <p key={m.month} className="flex-1 text-center text-[10px] text-ink-subtle">
+            {m.month}
+          </p>
         ))}
       </div>
 
