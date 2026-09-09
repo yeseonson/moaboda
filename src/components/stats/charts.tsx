@@ -13,8 +13,8 @@ export const PLANNED_HATCH =
 
 export const CAT_COLOR: Record<CategoryType, string> = {
   performance: "#27473C",
-  movie: "#5E4A6B",
-  book: "#A8543B",
+  movie: "#3E5F7A",
+  book: "#9E4A2F",
 };
 
 export const CAT_LABEL: Record<CategoryType, string> = {

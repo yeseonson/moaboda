@@ -19,8 +19,8 @@
 
   /* 카테고리 구분색 — assets/tokens.css 기준 */
   --color-cat-performance: #27473c;
-  --color-cat-movie: #5e4a6b;
-  --color-cat-book: #a8543b;
+  --color-cat-movie: #3e5f7a;
+  --color-cat-book: #9e4a2f;
   --color-sunday: #a8544b;
 
   /* 차트 트랙(빈 막대). 순위형 램프 5단계는 shadcn 의 --color-chart-* 와
