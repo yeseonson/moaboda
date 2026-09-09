@@ -28,6 +28,9 @@ const STATUS_OPTS: { value: StatusType; label: string }[] = [
   { value: "done", label: "봤어요" },
 ];
 
+/** 한 번에 그리는 목록 수. 영화가 850편이라 전부 그리면 포스터 요청이 그만큼 나간다 */
+const PAGE = 30;
+
 const TABS: { key: CategoryType; label: string; icon: string }[] = [
   { key: "performance", label: "공연", icon: "🎭" },
   { key: "movie", label: "영화", icon: "🎬" },
@@ -261,11 +264,15 @@ export default function RecentRecords() {
   const [subTab, setSubTab] = useState<StatusType | "all" | null>(null);
   const [year, setYear] = useState<string>(() => String(new Date().getFullYear()));
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(PAGE);
 
   const handleTabChange = (key: CategoryType) => {
     try { sessionStorage.setItem("home_tab", key); } catch {}
     setTab(key);
     setExpanded(new Set());
+    setQuery("");
+    setLimit(PAGE);
   };
 
   const toggleGroup = (key: string) => {
@@ -336,11 +343,18 @@ export default function RecentRecords() {
   const activeYear =
     year === "all" || years.some(([y]) => y === year) ? year : years[0]?.[0] ?? "all";
 
+  const searching = query.trim().length > 0;
+
   const yearRecords = useMemo(() => {
+    // 검색 중에는 연도를 무시한다. 언제 봤는지 기억나면 애초에 검색하지 않는다.
+    if (searching) {
+      const q = query.trim().toLowerCase();
+      return categoryRecords.filter((r) => r.title.toLowerCase().includes(q));
+    }
     if (activeYear === "all") return categoryRecords;
     if (activeYear === NO_DATE) return categoryRecords.filter((r) => !recordDate(r));
     return categoryRecords.filter((r) => (recordDate(r) ?? "").startsWith(activeYear));
-  }, [categoryRecords, activeYear]);
+  }, [categoryRecords, activeYear, searching, query]);
 
   // 해당 연도에 실제로 있는 상태만 하위 탭으로 노출한다.
   const subTabs = useMemo(() => {
@@ -357,8 +371,12 @@ export default function RecentRecords() {
   }, [yearRecords]);
 
   // 탭/연도를 옮기면 이전 하위 탭이 없을 수 있으니 렌더 시점에 보정한다.
-  const activeSubTab =
-    subTab && subTabs.some((s) => s.key === subTab) ? subTab : subTabs[0]?.key ?? "all";
+  // 검색 중에는 "전체" 로 둔다. 기본값(관람 예정)이 걸리면 찾은 결과가 가려진다.
+  const activeSubTab = searching
+    ? "all"
+    : subTab && subTabs.some((s) => s.key === subTab)
+      ? subTab
+      : subTabs[0]?.key ?? "all";
 
   const groups = useMemo(() => {
     const byWork = new Map<string, CulturalRecord[]>();
@@ -460,12 +478,38 @@ export default function RecentRecords() {
         </div>
       ) : (
         <div className="space-y-3">
-          {years.length > 1 && (
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setLimit(PAGE);
+              }}
+              placeholder="제목 검색"
+              className="w-full rounded-xl border border-line-strong py-2 pl-8 pr-8 text-sm outline-none transition focus:border-brand/40"
+            />
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-ink-subtle">
+              ⌕
+            </span>
+            {searching && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="검색 지우기"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-sm text-ink-subtle hover:text-ink"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* 검색 중에는 전체에서 찾으므로 연도 칩을 감춘다 */}
+          {!searching && years.length > 1 && (
             <div className="flex gap-1 overflow-x-auto pb-0.5">
               {years.map(([y, count]) => (
                 <button
                   key={y}
-                  onClick={() => setYear(y)}
+                  onClick={() => { setYear(y); setLimit(PAGE); }}
                   className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                     activeYear === y
                       ? "bg-brand-soft text-brand"
@@ -477,7 +521,7 @@ export default function RecentRecords() {
                 </button>
               ))}
               <button
-                onClick={() => setYear("all")}
+                onClick={() => { setYear("all"); setLimit(PAGE); }}
                 className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                   activeYear === "all"
                     ? "bg-brand-soft text-brand"
@@ -490,12 +534,13 @@ export default function RecentRecords() {
             </div>
           )}
 
-          {subTabs.length > 1 && (
+          {/* 검색 결과는 상태를 가리지 않고 다 보여준다 (activeSubTab 이 "all" 로 고정) */}
+          {!searching && subTabs.length > 1 && (
             <div className="flex gap-1 overflow-x-auto pb-0.5">
               {subTabs.map(({ key, label, count }) => (
                 <button
                   key={key}
-                  onClick={() => setSubTab(key)}
+                  onClick={() => { setSubTab(key); setLimit(PAGE); }}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                     activeSubTab === key
                       ? "bg-brand text-white"
@@ -508,25 +553,43 @@ export default function RecentRecords() {
             </div>
           )}
 
-          <ul className="space-y-2">
-            {groups.map((g) =>
-              g.records.length === 1 ? (
-                <li key={g.key}>
-                  <RecordCard record={g.records[0]} onStatusChange={handleStatusChange} />
-                </li>
-              ) : (
-                <li key={g.key}>
-                  <GroupRow
-                    group={g}
-                    open={expanded.has(g.key)}
-                    showPlanned={activeSubTab !== "done"}
-                    onToggle={() => toggleGroup(g.key)}
-                    onStatusChange={handleStatusChange}
-                  />
-                </li>
-              )
-            )}
-          </ul>
+          {groups.length === 0 ? (
+            <p className="py-8 text-center text-sm text-ink-subtle">
+              {searching ? `"${query.trim()}" 와 맞는 기록이 없어요.` : "이 조건에 맞는 기록이 없어요."}
+            </p>
+          ) : (
+            <>
+              <ul className="space-y-2">
+                {groups.slice(0, limit).map((g) =>
+                  g.records.length === 1 ? (
+                    <li key={g.key}>
+                      <RecordCard record={g.records[0]} onStatusChange={handleStatusChange} />
+                    </li>
+                  ) : (
+                    <li key={g.key}>
+                      <GroupRow
+                        group={g}
+                        open={expanded.has(g.key)}
+                        showPlanned={activeSubTab !== "done"}
+                        onToggle={() => toggleGroup(g.key)}
+                        onStatusChange={handleStatusChange}
+                      />
+                    </li>
+                  )
+                )}
+              </ul>
+
+              {groups.length > limit && (
+                <button
+                  type="button"
+                  onClick={() => setLimit((n) => n + PAGE)}
+                  className="w-full rounded-xl border border-line-strong py-2.5 text-xs font-medium text-ink-muted transition hover:border-brand/40 hover:text-ink"
+                >
+                  더 보기 ({limit} / {groups.length})
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
