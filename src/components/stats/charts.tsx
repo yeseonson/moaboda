@@ -162,12 +162,15 @@ export function MonthlyBar({
       <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: barColor }} />
-          관람 완료
+          {filterCat === "book" ? "완독" : "관람 완료"}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm" style={{ background: PLANNED_HATCH }} />
-          관람 예정
-        </span>
+        {/* 책에는 '관람 예정' 상태가 없다. 사선 막대가 없으면 범례도 뺀다 */}
+        {months.some((m) => m.planned > 0) && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-sm" style={{ background: PLANNED_HATCH }} />
+            관람 예정
+          </span>
+        )}
         {avg > 0 && (
           <span className="flex items-center gap-1.5">
             <span className="w-3 border-t border-dashed" style={{ borderColor: CHART_ACCENT }} />

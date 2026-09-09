@@ -299,7 +299,8 @@ export default function ProfilePage() {
                       {bookAuthors.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">작가별 통계</p>
-                          <RankedList items={bookAuthors} moreUnit="명" />
+                          {/* 작가별로 읽은 책 수라 '회' 가 아니라 '권' */}
+                          <RankedList items={bookAuthors} unit="권" moreUnit="명" />
                         </div>
                       )}
                       </>)}
