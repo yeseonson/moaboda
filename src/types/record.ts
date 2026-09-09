@@ -19,12 +19,6 @@ export const CAT_DOT: Record<CategoryType, string> = {
   book: "bg-cat-book",
 };
 
-export const CAT_EDGE: Record<CategoryType, string> = {
-  performance: "border-l-cat-performance",
-  movie: "border-l-cat-movie",
-  book: "border-l-cat-book",
-};
-
 export const STATUS_COLOR: Record<StatusType, string> = {
   want: "bg-cat-book/12 text-cat-book",
   in_progress: "bg-cat-movie/12 text-cat-movie",

@@ -6,7 +6,6 @@ import { api } from "@/lib/api";
 import RatingDots from "./RatingDots";
 import {
   CAT_DOT,
-  CAT_EDGE,
   CategoryType,
   CulturalRecord,
   STATUS_COLOR,
@@ -83,7 +82,7 @@ function RecordCard({
     <div className="relative">
       <Link
         href={`/records/${record.id}`}
-        className={`flex items-center gap-3 rounded-xl border border-l-2 border-line-strong p-3 transition hover:border-brand/25 ${CAT_EDGE[record.category]}`}
+        className="flex items-center gap-3 rounded-xl border border-line-strong p-3 transition hover:border-brand/25"
       >
         {record.poster_url ? (
           <img
@@ -200,7 +199,7 @@ function GroupRow({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className={`flex w-full items-center gap-3 rounded-xl border border-l-2 border-line-strong p-3 text-left transition hover:border-brand/25 ${CAT_EDGE[group.category]}`}
+        className="flex w-full items-center gap-3 rounded-xl border border-line-strong p-3 text-left transition hover:border-brand/25"
       >
         {group.poster_url ? (
           <img
