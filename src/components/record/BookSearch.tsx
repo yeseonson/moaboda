@@ -14,7 +14,8 @@ export interface BookResult {
 }
 
 interface Props {
-  onSelect: (result: BookResult) => void;
+  /** null 이면 검색을 건너뛰고 직접 입력한다 */
+  onSelect: (result: BookResult | null) => void;
 }
 
 export default function BookSearch({ onSelect }: Props) {
@@ -61,7 +62,16 @@ export default function BookSearch({ onSelect }: Props) {
       {loading && <p className="text-center text-sm text-zinc-400">검색 중...</p>}
 
       {!loading && searched && results.length === 0 && (
-        <p className="text-center text-sm text-zinc-400">검색 결과가 없어요</p>
+        <div className="space-y-2 text-center">
+          <p className="text-sm text-zinc-400">검색 결과가 없어요</p>
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="text-sm font-medium text-zinc-600 underline underline-offset-2"
+          >
+            직접 입력하기
+          </button>
+        </div>
       )}
 
       {results.length > 0 && (

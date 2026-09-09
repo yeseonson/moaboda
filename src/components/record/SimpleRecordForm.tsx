@@ -36,6 +36,10 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [genreInput, setGenreInput] = useState(searchMeta.tags?.join(", ") ?? "");
+  // 검색으로 온 값은 채워두고, 직접 입력이면 빈 칸에서 시작한다
+  const bookMeta = (extraPayload?.book ?? {}) as { author?: string | null; publisher?: string | null };
+  const [authorInput, setAuthorInput] = useState(bookMeta.author ?? "");
+  const [publisherInput, setPublisherInput] = useState(bookMeta.publisher ?? "");
   const [status, setStatus] = useState<StatusType>("done");
   const [watchMode, setWatchMode] = useState<"cinema" | "ott">("cinema");
   const [ottPick, setOttPick] = useState<string>("");
@@ -75,6 +79,8 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
           const bookBase = (base.book as object) ?? {};
           const book: Record<string, unknown> = { ...bookBase };
           if (genreInput.trim()) book.genre = genreInput.trim();
+          book.author = authorInput.trim() || null;
+          book.publisher = publisherInput.trim() || null;
           if (isDone) book.read_count = form.read_count;
           base.book = book;
         }
@@ -165,6 +171,23 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
             min={form.view_start || undefined}
             onChange={(e) => set("view_end", e.target.value)}
             className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+        </div>
+      )}
+
+      {isBook && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-zinc-500">지은이</label>
+            <input value={authorInput} onChange={(e) => setAuthorInput(e.target.value)}
+              placeholder="예) 김초엽"
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-zinc-500">출판사</label>
+            <input value={publisherInput} onChange={(e) => setPublisherInput(e.target.value)}
+              placeholder="예) 문학동네"
+              className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-400" />
+          </div>
         </div>
       )}
 
