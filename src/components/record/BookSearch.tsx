@@ -62,16 +62,7 @@ export default function BookSearch({ onSelect }: Props) {
       {loading && <p className="text-center text-sm text-zinc-400">검색 중...</p>}
 
       {!loading && searched && results.length === 0 && (
-        <div className="space-y-2 text-center">
-          <p className="text-sm text-zinc-400">검색 결과가 없어요</p>
-          <button
-            type="button"
-            onClick={() => onSelect(null)}
-            className="text-sm font-medium text-zinc-600 underline underline-offset-2"
-          >
-            직접 입력하기
-          </button>
-        </div>
+        <p className="text-center text-sm text-zinc-400">검색 결과가 없어요</p>
       )}
 
       {results.length > 0 && (
@@ -101,6 +92,20 @@ export default function BookSearch({ onSelect }: Props) {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* 결과가 있어도 찾는 판본이 없을 수 있다. 검색을 한 번이라도 했으면 계속 열어둔다 */}
+      {!loading && searched && (
+        <p className="text-center text-sm text-zinc-400">
+          찾는 책이 없나요?{" "}
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="font-medium text-zinc-600 underline underline-offset-2"
+          >
+            직접 입력하기
+          </button>
+        </p>
       )}
     </div>
   );
