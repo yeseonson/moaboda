@@ -24,13 +24,15 @@ function pickIsbn(raw: string): string {
 }
 
 /**
- * 썸네일은 120x174 로 작다. URL 의 fname 파라미터가 원본 이미지 주소라 그걸 꺼내 쓴다.
+ * 썸네일은 120x174 로 작다. URL 의 fname 파라미터가 원본 주소(458x638 쯤)라 그걸 꺼내 쓴다.
  * 크기를 직접 고쳐 쓰는 것(R120x174 -> R240x348)은 문서에 없는 동작이라 기대지 않는다.
+ * fname 은 http 로 오는데 그대로 두면 https 페이지에서 mixed content 로 막힌다.
  */
 function coverUrl(thumbnail: string): string | null {
   if (!thumbnail) return null;
   try {
-    return new URL(thumbnail).searchParams.get("fname") || thumbnail;
+    const origin = new URL(thumbnail).searchParams.get("fname");
+    return origin ? origin.replace(/^http:\/\//, "https://") : thumbnail;
   } catch {
     return thumbnail;
   }

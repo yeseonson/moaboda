@@ -11,6 +11,7 @@ Supabase SQL Editor 에서 직접 실행한 일회성 스크립트를 모아둔�
 | `import_왓챠영화.sql` | 왓챠 영화 852건 (TV 122건 제외). TMDB 에서 tmdb_id·포스터·장르·출연진을 채웠다. 관람일이 없는 417건은 `view_start = null` |
 | `fix_출연진_등제거.sql` | KOPIS 가 마지막 이름 뒤에 붙여 보내는 "등" 을 배열 원소에서 제거 |
 | `import_독서기록.sql` | 노션 BOOK LOG 56건. 알라딘에서 isbn·표지를 채웠다. 매칭 53 / 미매칭 3 |
+| `fix_책표지_카카오전환.sql` | 알라딘 표지 URL 52건을 카카오(다음 북) 원본으로 교체. 표지도 커진다 (cover200 → 458x638) |
 
 미매칭 3건(`여행은 늘 나보다 늦게 온다`, `고갱이`, `천녀유혼`)은 알라딘 DB 에 아예 없다.
 독립출판·북클럽 굿즈라 검색이 안 된다. isbn 과 표지를 비운 채 노션 정보만 넣었으니
@@ -51,6 +52,18 @@ create policy moa_catalog_all on books
   for all using (auth.uid() is not null) with check (auth.uid() is not null);
 -- movies, performances 도 동일
 ```
+
+## 알라딘 OpenAPI 종료
+
+2026-10-30 에 종료된다 (신규 키 발급은 9-04 마감). 책 검색은 카카오로 옮겼다.
+`fix_책표지_카카오전환.sql` 은 `import_독서기록.sql` 로 넣은 책만 다룬다.
+앱에서 직접 등록한 책이 남아 있는지는 이걸로 확인한다.
+
+```sql
+select isbn, title from books where poster_url like '%aladin%' order by title;
+```
+
+남은 게 있으면 ISBN 을 카카오 `target=isbn` 으로 조회해 같은 모양의 update 를 만든다.
 
 ## 되돌린 것
 
