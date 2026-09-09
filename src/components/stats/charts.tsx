@@ -105,7 +105,10 @@ export function MonthlyBar({
     };
   });
 
-  const max = Math.max(...months.map((m) => m.done + m.planned), 1);
+  // 관람 예정은 카테고리 탭에서만 쌓는다. 전체 탭은 카테고리 비교가 목적이다
+  const showPlanned = !!filterCat;
+  const total = (m: { done: number; planned: number }) => m.done + (showPlanned ? m.planned : 0);
+  const max = Math.max(...months.map(total), 1);
   const doneMonths = months.filter((m) => m.done > 0);
   const avg = doneMonths.length
     ? doneMonths.reduce((s, m) => s + m.done, 0) / doneMonths.length
@@ -153,7 +156,7 @@ export function MonthlyBar({
           {months.map((m) => {
             // 위에서 아래 순서. 예정이 맨 위, 그 아래로 책 · 영화 · 공연.
             const segments: { key: string; value: number; style: CSSProperties }[] = [
-              { key: "planned", value: m.planned, style: { background: PLANNED_HATCH } },
+              { key: "planned", value: showPlanned ? m.planned : 0, style: { background: PLANNED_HATCH } },
               ...(filterCat
                 ? [{ key: filterCat, value: m.done, style: { backgroundColor: barColor } }]
                 : STACK_ORDER.map((c) => ({
@@ -164,7 +167,7 @@ export function MonthlyBar({
             ].filter((s) => s.value > 0);
 
             return (
-              <div key={m.month} className="flex flex-1 flex-col justify-end gap-0.5">
+              <div key={m.month} className="flex flex-1 flex-col justify-end">
                 {segments.map((s, i) => (
                   <div
                     key={s.key}
@@ -179,10 +182,10 @@ export function MonthlyBar({
       </div>
 
       <div className="flex gap-1">
-        {months.map(({ month, done, planned }) => (
-          <div key={month} className="flex-1 text-center">
-            <p className="text-[10px] font-medium text-ink-muted">{done + planned || ""}</p>
-            <p className="text-[10px] text-ink-subtle">{month}</p>
+        {months.map((m) => (
+          <div key={m.month} className="flex-1 text-center">
+            <p className="text-[10px] font-medium text-ink-muted">{total(m) || ""}</p>
+            <p className="text-[10px] text-ink-subtle">{m.month}</p>
           </div>
         ))}
       </div>
@@ -203,7 +206,7 @@ export function MonthlyBar({
           ))
         )}
         {/* 책에는 '관람 예정' 상태가 없다. 사선 막대가 없으면 범례도 뺀다 */}
-        {months.some((m) => m.planned > 0) && (
+        {showPlanned && months.some((m) => m.planned > 0) && (
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-sm" style={{ background: PLANNED_HATCH }} />
             관람 예정
