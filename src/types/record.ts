@@ -9,6 +9,22 @@ export const STATUS_LABEL: Record<StatusType, string> = {
   done: "봤어요",
 };
 
+/**
+ * 카테고리 마커 색. 채움이 아니라 점·선에만 쓴다 (assets/README.md).
+ * 활성 탭·버튼은 계속 브랜드 그린이다.
+ */
+export const CAT_DOT: Record<CategoryType, string> = {
+  performance: "bg-cat-performance",
+  movie: "bg-cat-movie",
+  book: "bg-cat-book",
+};
+
+export const CAT_EDGE: Record<CategoryType, string> = {
+  performance: "border-l-cat-performance",
+  movie: "border-l-cat-movie",
+  book: "border-l-cat-book",
+};
+
 export const STATUS_COLOR: Record<StatusType, string> = {
   want: "bg-cat-book/12 text-cat-book",
   in_progress: "bg-cat-movie/12 text-cat-movie",

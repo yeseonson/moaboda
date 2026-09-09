@@ -5,6 +5,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import RatingDots from "./RatingDots";
 import {
+  CAT_DOT,
+  CAT_EDGE,
   CategoryType,
   CulturalRecord,
   STATUS_COLOR,
@@ -81,7 +83,7 @@ function RecordCard({
     <div className="relative">
       <Link
         href={`/records/${record.id}`}
-        className="flex items-center gap-3 rounded-xl border border-line-strong p-3 transition hover:border-brand/25"
+        className={`flex items-center gap-3 rounded-xl border border-l-2 border-line-strong p-3 transition hover:border-brand/25 ${CAT_EDGE[record.category]}`}
       >
         {record.poster_url ? (
           <img
@@ -198,7 +200,7 @@ function GroupRow({
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-xl border border-line-strong p-3 text-left transition hover:border-brand/25"
+        className={`flex w-full items-center gap-3 rounded-xl border border-l-2 border-line-strong p-3 text-left transition hover:border-brand/25 ${CAT_EDGE[group.category]}`}
       >
         {group.poster_url ? (
           <img
@@ -456,6 +458,11 @@ export default function RecentRecords() {
                 : "text-ink-muted hover:text-ink"
             }`}
           >
+            {/* 선택된 탭은 그린 배경이라 카테고리 색이 묻힌다. 그때만 흰 점 */}
+            <span
+              aria-hidden
+              className={`mr-1.5 h-1.5 w-1.5 rounded-full ${tab === key ? "bg-white/70" : CAT_DOT[key]}`}
+            />
             {label}
           </button>
         ))}
