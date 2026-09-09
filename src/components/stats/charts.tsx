@@ -4,8 +4,18 @@ import { useState } from "react";
 import { CategoryType, CulturalRecord, recordDate } from "@/types/record";
 import RatingDots from "@/components/record/RatingDots";
 
-/** 순위형 차트 램프 (assets/tokens.css). 1위가 가장 진하다. */
-export const CHART_RAMP = ["#27473C", "#3D6455", "#5A806F", "#8AA79A", "#C3D2CB"];
+/**
+ * 순위형 차트 램프. 1위가 가장 진하다.
+ * 공연은 assets/tokens.css 의 그린 5단계 그대로, 나머지는 그 명도·채도 곡선을
+ * 각 카테고리 색에 그대로 옮겨 만들었다 (색상만 다르고 리듬은 같다).
+ */
+export const CAT_RAMP: Record<CategoryType, string[]> = {
+  performance: ["#27473C", "#3D6455", "#5A806F", "#8AA79A", "#C3D2CB"],
+  movie: ["#3E5F7A", "#51728D", "#6D879C", "#97A6B3", "#C2CBD3"],
+  book: ["#9E4A2F", "#AE5C42", "#B17866", "#BF9D92", "#D8C3BD"],
+};
+
+export const CHART_RAMP = CAT_RAMP.performance;
 export const CHART_ACCENT = "#C08A2E"; // 평균선 · 1~3위 번호
 /** 관람 예정은 채움 대신 사선 (assets/README.md) */
 export const PLANNED_HATCH =
@@ -24,8 +34,9 @@ export const CAT_LABEL: Record<CategoryType, string> = {
 };
 
 /** 순위(0부터)에 대응하는 램프 색. 램프보다 항목이 많으면 마지막 색. */
-export function rampColor(rank: number): string {
-  return CHART_RAMP[Math.min(rank, CHART_RAMP.length - 1)];
+export function rampColor(rank: number, cat: CategoryType = "performance"): string {
+  const ramp = CAT_RAMP[cat];
+  return ramp[Math.min(rank, ramp.length - 1)];
 }
 
 const pct = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0);
@@ -183,7 +194,7 @@ export function MonthlyBar({
 }
 
 // ── 별점 분포 (세로 막대) ─────────────────────────────────
-export function RatingDist({ records }: { records: CulturalRecord[] }) {
+export function RatingDist({ records, cat }: { records: CulturalRecord[]; cat?: CategoryType }) {
   const rated = records.filter((r) => r.rating);
   if (!rated.length) return <p className="text-sm text-ink-subtle">평점 기록이 없어요</p>;
 
@@ -208,7 +219,7 @@ export function RatingDist({ records }: { records: CulturalRecord[] }) {
             className="w-full rounded-t-sm"
             style={{
               height: Math.max((count / max) * 96, count > 0 ? 4 : 0),
-              backgroundColor: rampColor(rankOf.get(star) ?? 4),
+              backgroundColor: rampColor(rankOf.get(star) ?? 4, cat),
             }}
           />
           {/* 정수 눈금만 라벨을 단다. 9칸에 전부 적으면 읽기 어렵다 */}
@@ -222,7 +233,7 @@ export function RatingDist({ records }: { records: CulturalRecord[] }) {
 }
 
 // ── 장르별 (가로 막대 + 비율) ─────────────────────────────
-export function GenreBar({ items }: { items: [string, number][] }) {
+export function GenreBar({ items, cat }: { items: [string, number][]; cat?: CategoryType }) {
   if (!items.length) return <p className="text-sm text-ink-subtle">장르 데이터가 없어요</p>;
   const max = items[0][1];
   const total = items.reduce((s, [, v]) => s + v, 0);
@@ -235,7 +246,7 @@ export function GenreBar({ items }: { items: [string, number][] }) {
           <div className="h-2.5 flex-1 rounded-full bg-chart-track">
             <div
               className="h-2.5 rounded-full transition-all"
-              style={{ width: `${(count / max) * 100}%`, backgroundColor: rampColor(i) }}
+              style={{ width: `${(count / max) * 100}%`, backgroundColor: rampColor(i, cat) }}
             />
           </div>
           <span className="w-8 shrink-0 text-right text-xs font-semibold text-ink">{count}</span>
@@ -251,11 +262,13 @@ export function GenreBar({ items }: { items: [string, number][] }) {
 // ── 순위 목록 (상위 N + 더보기) ───────────────────────────
 export function RankedList({
   items,
+  cat,
   initial = 6,
   unit = "회",
   moreUnit = "개",
 }: {
   items: [string, number][];
+  cat?: CategoryType;
   initial?: number;
   unit?: string;
   moreUnit?: string;
@@ -283,7 +296,7 @@ export function RankedList({
             <div className="h-1.5 rounded-full bg-chart-track">
               <div
                 className="h-1.5 rounded-full transition-all"
-                style={{ width: `${(count / max) * 100}%`, backgroundColor: rampColor(i) }}
+                style={{ width: `${(count / max) * 100}%`, backgroundColor: rampColor(i, cat) }}
               />
             </div>
           </div>

@@ -206,19 +206,19 @@ export default function ProfilePage() {
                       {perfSubCats.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">장르별 통계</p>
-                          <GenreBar items={perfSubCats} />
+                          <GenreBar items={perfSubCats} cat="performance" />
                         </div>
                       )}
                       <div>
                         <p className="mb-3 text-xs font-medium text-ink-muted">별점 분포</p>
-                        <RatingDist records={donePerfRecords} />
+                        <RatingDist records={donePerfRecords} cat="performance" />
                       </div>
                       {perfByRun.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">
                             공연별 관람 횟수
                           </p>
-                          <RankedList items={perfByRun} moreUnit="편" />
+                          <RankedList items={perfByRun} cat="performance" moreUnit="편" />
                         </div>
                       )}
                       {castStats.length > 0 && (
@@ -226,7 +226,7 @@ export default function ProfilePage() {
                           <p className="mb-3 text-xs font-medium text-ink-muted">
                             함께한 배우
                           </p>
-                          <RankedList items={castStats} moreUnit="명" />
+                          <RankedList items={castStats} cat="performance" moreUnit="명" />
                         </div>
                       )}
                     </>
@@ -251,21 +251,21 @@ export default function ProfilePage() {
                       {movieByRun.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">영화별 관람 횟수</p>
-                          <RankedList items={movieByRun} moreUnit="편" />
+                          <RankedList items={movieByRun} cat="movie" moreUnit="편" />
                         </div>
                       )}
                       <div>
                         <p className="mb-3 text-xs font-medium text-ink-muted">장르별 통계</p>
-                        <GenreBar items={movieGenres} />
+                        <GenreBar items={movieGenres} cat="movie" />
                       </div>
                       <div>
                         <p className="mb-3 text-xs font-medium text-ink-muted">평점 분포</p>
-                        <RatingDist records={doneMovieRecords} />
+                        <RatingDist records={doneMovieRecords} cat="movie" />
                       </div>
                       {movieCastStats.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">함께한 배우</p>
-                          <RankedList items={movieCastStats} moreUnit="명" />
+                          <RankedList items={movieCastStats} cat="movie" moreUnit="명" />
                         </div>
                       )}
                       </>)}
@@ -290,17 +290,17 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <p className="mb-3 text-xs font-medium text-ink-muted">장르별 통계</p>
-                        <GenreBar items={bookGenres} />
+                        <GenreBar items={bookGenres} cat="book" />
                       </div>
                       <div>
                         <p className="mb-3 text-xs font-medium text-ink-muted">평점 분포</p>
-                        <RatingDist records={doneBookRecords} />
+                        <RatingDist records={doneBookRecords} cat="book" />
                       </div>
                       {bookAuthors.length > 0 && (
                         <div>
                           <p className="mb-3 text-xs font-medium text-ink-muted">작가별 통계</p>
                           {/* 작가별로 읽은 책 수라 '회' 가 아니라 '권' */}
-                          <RankedList items={bookAuthors} unit="권" moreUnit="명" />
+                          <RankedList items={bookAuthors} cat="book" unit="권" moreUnit="명" />
                         </div>
                       )}
                       </>)}
