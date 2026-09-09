@@ -89,7 +89,7 @@ where not exists (
 insert into records (user_id, category, book_id, title, poster_url,
                      view_start, view_end, status, rating, is_public)
 select '3e4756d0-1ee5-4880-aa4f-206547c74d6b'::uuid, 'book', b.id, v.title, b.poster_url,
-       v.view_start::date, v.view_end::date, 'done', v.rating, false
+       v.view_start::date, v.view_end::date, 'done', v.rating::numeric, false
 from (values
   ('9788901297453', '나는 메트로폴리탄 미술관의 경비원입니다', '2025-03-19', null, 3),
   ('9791191824001', '지구 끝의 온실', '2022-12-15', null, 3.5),
@@ -156,7 +156,7 @@ where not exists (
 insert into records (user_id, category, book_id, title, poster_url,
                      view_start, view_end, status, rating, is_public)
 select '3e4756d0-1ee5-4880-aa4f-206547c74d6b'::uuid, 'book', b.id, v.title, b.poster_url,
-       v.view_start::date, v.view_end::date, 'in_progress', v.rating, false
+       v.view_start::date, v.view_end::date, 'in_progress', v.rating::numeric, false
 from (values
   ('9788957334010', '부정한 미녀들', '2026-04-15', null, null),
   ('9788983718914', '김상욱의 양자공부', '2026-09-07', null, null)
@@ -174,7 +174,7 @@ where not exists (
 insert into records (user_id, category, book_id, title, poster_url,
                      view_start, view_end, status, rating, is_public)
 select '3e4756d0-1ee5-4880-aa4f-206547c74d6b'::uuid, 'book', b.id, v.title, b.poster_url,
-       v.view_start::date, v.view_end::date, 'done', v.rating, false
+       v.view_start::date, v.view_end::date, 'done', v.rating::numeric, false
 from (values
   ('여행은 늘 나보다 늦게 온다', '여행은 늘 나보다 늦게 온다', '2026-05-15', '2026-05-16', 3.5),
   ('고갱이', '고갱이', '2026-08-25', '2026-08-27', 3),
