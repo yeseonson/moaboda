@@ -176,11 +176,14 @@ interface WorkGroup {
 function GroupRow({
   group,
   open,
+  showPlanned,
   onToggle,
   onStatusChange,
 }: {
   group: WorkGroup;
   open: boolean;
+  /** '봤어요' 탭에서는 예정 건수가 목록과 무관해 감춘다 */
+  showPlanned: boolean;
   onToggle: () => void;
   onStatusChange: (id: string, status: StatusType) => Promise<void>;
 }) {
@@ -217,7 +220,7 @@ function GroupRow({
                 {group.doneCount}회
               </span>
             )}
-            {group.plannedCount > 0 && (
+            {showPlanned && group.plannedCount > 0 && (
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR.planned}`}>
                 예정 {group.plannedCount}
               </span>
@@ -313,26 +316,31 @@ export default function RecentRecords() {
   );
 
   // 연도 -> 상태 순으로 거른다. 그래야 지난 연도에서 "관람 예정" 탭이 저절로 사라진다.
+  // 연도 칩. 관람일을 모르는 기록(왓챠 임포트분 등)은 "날짜 없음" 으로 따로 모은다.
+  // 그러지 않으면 어떤 연도에도 안 걸려 전체 보기에서만 나타난다.
+  const NO_DATE = "none";
   const years = useMemo(() => {
     const c: Record<string, number> = {};
     for (const r of categoryRecords) {
       const d = recordDate(r);
-      if (d) c[d.slice(0, 4)] = (c[d.slice(0, 4)] ?? 0) + 1;
+      c[d ? d.slice(0, 4) : NO_DATE] = (c[d ? d.slice(0, 4) : NO_DATE] ?? 0) + 1;
     }
-    return Object.entries(c).sort((a, b) => b[0].localeCompare(a[0]));
+    return Object.entries(c).sort(([a], [b]) => {
+      if (a === NO_DATE) return 1; // 날짜 없음은 맨 뒤
+      if (b === NO_DATE) return -1;
+      return b.localeCompare(a);
+    });
   }, [categoryRecords]);
 
   // 올해가 없으면 가장 최근 연도로 떨어진다.
   const activeYear =
     year === "all" || years.some(([y]) => y === year) ? year : years[0]?.[0] ?? "all";
 
-  const yearRecords = useMemo(
-    () =>
-      activeYear === "all"
-        ? categoryRecords
-        : categoryRecords.filter((r) => (recordDate(r) ?? "").startsWith(activeYear)),
-    [categoryRecords, activeYear]
-  );
+  const yearRecords = useMemo(() => {
+    if (activeYear === "all") return categoryRecords;
+    if (activeYear === NO_DATE) return categoryRecords.filter((r) => !recordDate(r));
+    return categoryRecords.filter((r) => (recordDate(r) ?? "").startsWith(activeYear));
+  }, [categoryRecords, activeYear]);
 
   // 해당 연도에 실제로 있는 상태만 하위 탭으로 노출한다.
   const subTabs = useMemo(() => {
@@ -464,7 +472,7 @@ export default function RecentRecords() {
                       : "text-ink-subtle hover:text-ink"
                   }`}
                 >
-                  {y}
+                  {y === NO_DATE ? "날짜 없음" : y}
                   <span className="ml-1 text-[10px] opacity-60">{count}</span>
                 </button>
               ))}
@@ -511,6 +519,7 @@ export default function RecentRecords() {
                   <GroupRow
                     group={g}
                     open={expanded.has(g.key)}
+                    showPlanned={activeSubTab !== "done"}
                     onToggle={() => toggleGroup(g.key)}
                     onStatusChange={handleStatusChange}
                   />
