@@ -207,7 +207,8 @@ export default function SimpleRecordForm({ category, searchMeta, extraPayload, s
         </div>
       )}
 
-      {showVenue && (
+      {/* '보고 싶어요' 는 아직 안 본 기록이라 관람 방식이 없다. 저장 payload 도 같은 조건으로 뺀다 */}
+      {showVenue && !isWant && (
         <div className="space-y-2">
           <label className="text-xs font-medium text-zinc-500">관람 방식</label>
           <div className="flex gap-1 rounded-xl border border-zinc-200 p-1">
