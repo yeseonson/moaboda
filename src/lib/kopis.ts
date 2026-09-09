@@ -36,7 +36,12 @@ export function rows(xml: string): string[] {
 /** "김유정, 박보검" → ["김유정", "박보검"] */
 export function splitCast(value: string | null): string[] | null {
   if (!value) return null;
-  const names = value.split(",").map((n) => n.trim()).filter(Boolean);
+  const names = value
+    .split(",")
+    // KOPIS 는 명단이 더 있을 때 마지막 이름 뒤에 "등" 을 붙인다 ("한보라 등").
+    // 이름의 일부가 아니므로 떼어낸다. 단독으로 온 "등" 도 버린다.
+    .map((n) => n.trim().replace(/\s+등$/, "").trim())
+    .filter((n) => n && n !== "등");
   return names.length > 0 ? names : null;
 }
 
